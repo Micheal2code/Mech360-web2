@@ -1,0 +1,6 @@
+{
+  "name": "ClassHub - 400L Mechanical Engineering Portal",
+  "description": "Real-time academic portal for 400L Mechanical Engineering students featuring verified matric authentication, course repository, lecture audio player, assignment deadlines with broadcasts, topic channels, and Gemini AI study tutor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
