@@ -455,10 +455,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 pt-1">
               <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider mb-1">
-                Read Course Notes ({studentProgress.notesRead.length} read)
+                Read Course Notes ({(studentProgress?.notesRead || []).length} read)
               </div>
               {notes.slice(0, 4).map((n) => {
-                const isRead = studentProgress.notesRead.includes(n.id);
+                const isRead = (studentProgress?.notesRead || []).includes(n.id);
                 return (
                   <label
                     key={n.id}
@@ -478,10 +478,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               })}
 
               <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider mt-3 mb-1">
-                Assignment Submissions ({studentProgress.assignmentsCompleted.length} completed)
+                Assignment Submissions ({(studentProgress?.assignmentsCompleted || []).length} completed)
               </div>
               {assignments.slice(0, 3).map((a) => {
-                const isCompleted = studentProgress.assignmentsCompleted.includes(a.id);
+                const isCompleted = (studentProgress?.assignmentsCompleted || []).includes(a.id);
                 return (
                   <label
                     key={a.id}

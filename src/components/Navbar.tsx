@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     navItems.push({ id: 'admin', label: 'Admin Portal', emoji: '🛡️' });
   }
 
-  const latestAnnouncement = announcements.length > 0 ? announcements[0] : null;
+  const latestAnnouncement = (announcements || []).length > 0 ? announcements[0] : null;
 
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-900 border-b border-slate-800 shadow-md">
