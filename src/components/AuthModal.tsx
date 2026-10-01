@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,13 +21,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     isSecretAdminRoute ? 'admin' : 'student'
   );
 
-  // Student Flow State
-  const [authStep, setAuthStep] = useState<'check_matric' | 'setup_password' | 'enter_password'>('check_matric');
+  // Student Flow State (including Forgot Password steps)
+  const [authStep, setAuthStep] = useState<'check_matric' | 'setup_password' | 'enter_password' | 'forgot_password' | 'enter_reset_code'>('check_matric');
   const [matricInput, setMatricInput] = useState('');
   const [studentInfo, setStudentInfo] = useState<{ matricNo: string; fullName: string } | null>(null);
 
   const [passwordInput, setPasswordInput] = useState('');
   const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [resetCodeInput, setResetCodeInput] = useState('');
 
   // Admin Quick Login State
   const [adminPin, setAdminPin] = useState('');
@@ -231,12 +233,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleForgotPasswordRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!matricInput.trim()) {
+      setErrorMsg('Please enter your matriculation number.');
+      return;
+    }
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await api.forgotPassword(matricInput.trim().toUpperCase());
+      setSuccessMsg(res.message || 'Verification code generated and sent to Admin Portal.');
+      setAuthStep('enter_reset_code');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to request password reset code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetWithCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!matricInput.trim() || !resetCodeInput.trim() || !passwordInput.trim()) {
+      setErrorMsg('Matric number, reset code, and new password are required.');
+      return;
+    }
+    if (passwordInput !== confirmPasswordInput) {
+      setErrorMsg('New passwords do not match.');
+      return;
+    }
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await api.resetWithCode(matricInput.trim().toUpperCase(), resetCodeInput.trim(), passwordInput.trim());
+      setSuccessMsg(res.message || 'Password successfully reset! You can now log in.');
+      setTimeout(() => {
+        setAuthStep('enter_password');
+        setResetCodeInput('');
+        setPasswordInput('');
+        setConfirmPasswordInput('');
+        setErrorMsg('');
+        setSuccessMsg('');
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to reset password. Please check the reset code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setAuthStep('check_matric');
     setMatricInput('');
     setStudentInfo(null);
     setPasswordInput('');
     setConfirmPasswordInput('');
+    setResetCodeInput('');
     setAdminPin('');
     setErrorMsg('');
     setSuccessMsg('');
@@ -477,21 +531,148 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setAuthStep('check_matric')}
-                      className="text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
-                    >
-                      ← Change Matric
-                    </button>
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setAuthStep('check_matric')}
+                        className="text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                      >
+                        ← Change Matric
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setAuthStep('forgot_password')}
+                        className="text-xs font-bold text-red-400 hover:text-red-300 cursor-pointer"
+                      >
+                        ❓ Forgot Password?
+                      </button>
+                    </div>
 
                     <button
                       type="submit"
                       disabled={loading || !passwordInput}
-                      className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold py-2.5 px-5 rounded-xl text-xs border border-blue-400 shadow cursor-pointer transition-all"
+                      className="w-full mt-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-2xl text-xs border border-blue-400 shadow cursor-pointer transition-all"
                     >
                       {loading ? 'Verifying Password...' : '🔓 Enter Dashboard'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* STEP 3A: FORGOT PASSWORD REQUEST CODE */}
+              {authStep === 'forgot_password' && (
+                <form onSubmit={handleForgotPasswordRequest} className="space-y-4">
+                  <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-xs">
+                    <div className="text-red-400 font-bold uppercase text-[10px]">Forgot Password Flow</div>
+                    <p className="text-slate-300 text-xs mt-1 leading-relaxed">
+                      This will generate a 6-digit verification code and dispatch it to the Admin Portal. Contact the Class Rep / Administrator to retrieve your code.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-200 mb-1">
+                      Your Matriculation Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="EES/XX/XX/XXXX"
+                      value={matricInput}
+                      onChange={(e) => setMatricInput(e.target.value.toUpperCase())}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-2xl px-4 py-3 text-sm font-mono text-white tracking-wider uppercase focus:outline-none shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setAuthStep(studentInfo ? 'enter_password' : 'check_matric')}
+                      className="text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      ← Back
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={loading || !matricInput.trim()}
+                      className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold py-2.5 px-5 rounded-xl text-xs border border-blue-400 shadow cursor-pointer transition-all"
+                    >
+                      {loading ? 'Generating...' : '🔑 Request Code'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* STEP 3B: ENTER CODE & RESET PASSWORD */}
+              {authStep === 'enter_reset_code' && (
+                <form onSubmit={handleResetWithCodeSubmit} className="space-y-4">
+                  <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-xs">
+                    <div className="text-emerald-400 font-bold uppercase text-[10px]">Reset Password with Code</div>
+                    <p className="text-slate-300 text-[11px] mt-1">
+                      Enter the 6-digit code received from the Admin Portal, then set your new secure password.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-200 mb-1">
+                      6-Digit Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      placeholder="e.g. 123456"
+                      value={resetCodeInput}
+                      onChange={(e) => setResetCodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-2xl px-4 py-3 text-center text-lg font-mono text-white focus:outline-none shadow-inner tracking-[0.3em]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-200 mb-1">
+                      Create New Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="At least 4 characters"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-200 mb-1">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Confirm your new password"
+                      value={confirmPasswordInput}
+                      onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none shadow-inner"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setAuthStep('forgot_password')}
+                      className="text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      ← Back
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={loading || !resetCodeInput || !passwordInput || !confirmPasswordInput}
+                      className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold py-2.5 px-5 rounded-xl text-xs border border-emerald-400 shadow cursor-pointer transition-all"
+                    >
+                      {loading ? 'Resetting...' : '💾 Reset & Save Password'}
                     </button>
                   </div>
                 </form>

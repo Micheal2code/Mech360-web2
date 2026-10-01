@@ -125,11 +125,16 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between pb-24 engineering-grid">
-      {/* Navbar */}
+      {/* Navbar with search capabilities */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         announcements={announcements}
+        courses={courses}
+        notes={notes}
+        recordings={recordings}
+        assignments={assignments}
+        onNavigate={handleNavigate}
         onOpenAuth={() => setAuthModalOpen(true)}
         onOpenProfile={() => setProfileModalOpen(true)}
       />

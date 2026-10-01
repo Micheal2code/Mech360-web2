@@ -14,10 +14,12 @@ interface AdminPortalViewProps {
 export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assignments, pdfRequests, onRefreshAll }) => {
   const { currentUser, isMasterAdmin, isAssistantAdmin, canUpload } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'courses' | 'upload-note' | 'upload-audio' | 'assignment' | 'broadcast' | 'roster' | 'assistants' | 'passwords' | 'audit'>('courses');
+  const [activeTab, setActiveTab] = useState<'courses' | 'upload-note' | 'upload-audio' | 'assignment' | 'broadcast' | 'roster' | 'assistants' | 'passwords' | 'audit' | 'reset-codes' | 'progress-monitor'>('courses');
   const [roster, setRoster] = useState<StudentRecord[]>([]);
   const [passwordsList, setPasswordsList] = useState<StudentPasswordRecord[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [resetCodes, setResetCodes] = useState<any[]>([]);
+  const [monitorData, setMonitorData] = useState<any[]>([]);
   const [rosterSearch, setRosterSearch] = useState('');
   const [passwordsSearch, setPasswordsSearch] = useState('');
   const [showPlainText, setShowPlainText] = useState<Record<string, boolean>>({});
@@ -41,6 +43,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
   const [uploadSummary, setUploadSummary] = useState('');
   const [uploadFullContent, setUploadFullContent] = useState('');
   const [uploadTags, setUploadTags] = useState('');
+  const [uploadSemester, setUploadSemester] = useState<'Harmattan Semester' | 'Rain Semester'>('Harmattan Semester');
 
   // Upload Audio Recording Form State
   const [audioCourseCode, setAudioCourseCode] = useState('');
@@ -49,6 +52,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
   const [audioDuration, setAudioDuration] = useState('25:00');
   const [audioNotes, setAudioNotes] = useState('');
   const [audioTimestampsText, setAudioTimestampsText] = useState('00:00 - Introduction & Review\n08:30 - Core Formula Derivation\n18:15 - Worked Numerical Example');
+  const [audioSemester, setAudioSemester] = useState<'Harmattan Semester' | 'Rain Semester'>('Harmattan Semester');
 
   // Post Assignment Form State
   const [assCourseCode, setAssCourseCode] = useState('');
@@ -58,6 +62,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
   const [assPoints, setAssPoints] = useState(20);
   const [assInstructions, setAssInstructions] = useState('Submit physical hardcopy in LT-2 Department Assignment Box.');
   const [assAttachment, setAssAttachment] = useState('');
+  const [assSemester, setAssSemester] = useState<'Harmattan Semester' | 'Rain Semester'>('Harmattan Semester');
 
   // Broadcast Form State
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -69,15 +74,19 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
     if (!currentUser?.matricNo) return;
     try {
       setLoading(true);
-      if (isMasterAdmin) {
-        const [rosterRes, logsRes, passRes] = await Promise.all([
-          api.getRoster(currentUser.matricNo),
-          api.getAuditLogs(currentUser.matricNo),
-          api.getAdminPasswords(currentUser.matricNo),
+      if (isMasterAdmin || canUpload) {
+        const [rosterRes, logsRes, passRes, resetRes, monitorRes] = await Promise.all([
+          isMasterAdmin ? api.getRoster(currentUser.matricNo) : Promise.resolve({ roster: [] }),
+          isMasterAdmin ? api.getAuditLogs(currentUser.matricNo) : Promise.resolve({ logs: [] }),
+          isMasterAdmin ? api.getAdminPasswords(currentUser.matricNo) : Promise.resolve({ passwords: [] }),
+          api.getAdminResetCodes(currentUser.matricNo),
+          api.getProgressMonitor(currentUser.matricNo),
         ]);
         setRoster(rosterRes.roster || []);
         setAuditLogs(logsRes.logs || []);
         setPasswordsList(passRes.passwords || []);
+        setResetCodes(resetRes.requests || []);
+        setMonitorData(monitorRes.monitor || []);
       }
     } catch (e) {
       console.error('Error fetching admin portal data:', e);
@@ -175,7 +184,8 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         summary: uploadSummary.trim(),
         fullContent: uploadFullContent.trim() || uploadSummary.trim(),
         tags: uploadTags.split(',').map((t) => t.trim()).filter(Boolean),
-      });
+        semester: uploadSemester,
+      } as any);
 
       setActionSuccess('Course note published to repository successfully!');
       setUploadTopic('');
@@ -220,7 +230,8 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         audioUrl: 'https://cdn.freesound.org/previews/568/568019_11861866-lq.mp3',
         timestamps: parsedTimestamps.length > 0 ? parsedTimestamps : [{ time: '00:00', seconds: 0, label: 'Lecture Intro' }],
         notes: audioNotes.trim() || 'Lecture audio notes.',
-      });
+        semester: audioSemester,
+      } as any);
 
       setActionSuccess('Lecture audio uploaded successfully!');
       setAudioTopic('');
@@ -250,7 +261,8 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         points: Number(assPoints) || 20,
         instructions: assInstructions.trim(),
         attachmentName: assAttachment.trim() || undefined,
-      });
+        semester: assSemester,
+      } as any);
 
       setActionSuccess('Assignment posted successfully!');
       setAssTitle('');
@@ -452,6 +464,26 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
               >
                 <span>🔍</span>
                 <span>Audit Logs</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('reset-codes')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                  activeTab === 'reset-codes' ? 'bg-red-800 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>🔑</span>
+                <span>Password Reset Codes</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('progress-monitor')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                  activeTab === 'progress-monitor' ? 'bg-emerald-700 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>📊</span>
+                <span>Progress Monitor</span>
               </button>
             </>
           )}
@@ -714,15 +746,29 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Tags (Comma separated)</label>
-              <input
-                type="text"
-                placeholder="e.g. Exergy, Rankine, Boiler"
-                value={uploadTags}
-                onChange={(e) => setUploadTags(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Tags (Comma separated)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Exergy, Rankine, Boiler"
+                  value={uploadTags}
+                  onChange={(e) => setUploadTags(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
+                <select
+                  value={uploadSemester}
+                  onChange={(e) => setUploadSemester(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                >
+                  <option value="Harmattan Semester">🍂 Harmattan Semester</option>
+                  <option value="Rain Semester">🌧️ Rain Semester</option>
+                </select>
+              </div>
             </div>
 
             <button
@@ -822,15 +868,29 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Lecture Transcript / Notes</label>
-              <textarea
-                rows={3}
-                placeholder="Summary of audio recording..."
-                value={audioNotes}
-                onChange={(e) => setAudioNotes(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Lecture Transcript / Notes</label>
+                <textarea
+                  rows={2}
+                  placeholder="Summary of audio recording..."
+                  value={audioNotes}
+                  onChange={(e) => setAudioNotes(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
+                <select
+                  value={audioSemester}
+                  onChange={(e) => setAudioSemester(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                >
+                  <option value="Harmattan Semester">🍂 Harmattan Semester</option>
+                  <option value="Rain Semester">🌧️ Rain Semester</option>
+                </select>
+              </div>
             </div>
 
             <button
@@ -942,15 +1002,29 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Attached Problem Set Name (Optional)</label>
-              <input
-                type="text"
-                placeholder="e.g. MEE401_Problem_Set_1.pdf"
-                value={assAttachment}
-                onChange={(e) => setAssAttachment(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Attached Problem Set Name (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. MEE401_Problem_Set_1.pdf"
+                  value={assAttachment}
+                  onChange={(e) => setAssAttachment(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
+                <select
+                  value={assSemester}
+                  onChange={(e) => setAssSemester(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                >
+                  <option value="Harmattan Semester">🍂 Harmattan Semester</option>
+                  <option value="Rain Semester">🌧️ Rain Semester</option>
+                </select>
+              </div>
             </div>
 
             <button
@@ -1513,6 +1587,121 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
                 })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tab: Generated Password Reset Codes */}
+      {activeTab === 'reset-codes' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🔑</span>
+                <h2 className="font-extrabold text-white text-base">Generated Password Reset Codes</h2>
+              </div>
+              <p className="text-xs text-slate-400">
+                Codes requested by students via "Forgot Password?". Share the code with the student so they can reset their password.
+              </p>
+            </div>
+            <button
+              onClick={fetchAdminData}
+              className="text-xs font-bold text-blue-400 hover:text-blue-300 cursor-pointer bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl"
+            >
+              🔄 Refresh List
+            </button>
+          </div>
+
+          {resetCodes.length === 0 ? (
+            <div className="bg-slate-950 p-8 rounded-xl border border-slate-800 text-center text-slate-400 text-xs">
+              <span>🎉</span> No active password reset code requests.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {resetCodes.map((req) => (
+                <div
+                  key={req.id}
+                  className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-white text-sm">{req.fullName}</span>
+                      <span className="font-mono text-xs text-blue-400 font-bold">{req.matricNo}</span>
+                      <span
+                        className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded ${
+                          req.used ? 'bg-slate-800 text-slate-400' : 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                        }`}
+                      >
+                        {req.used ? 'USED' : 'ACTIVE'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-1 font-mono">
+                      Requested: {new Date(req.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 border border-blue-500/50 p-3 rounded-xl text-center min-w-[120px]">
+                    <div className="text-[9px] text-slate-400 uppercase font-bold">Verification Code</div>
+                    <div className="text-lg font-mono font-extrabold text-amber-300 tracking-widest">{req.code}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Student Progress Monitor */}
+      {activeTab === 'progress-monitor' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📊</span>
+                <h2 className="font-extrabold text-white text-base">Student Learning Progress Monitor</h2>
+              </div>
+              <p className="text-xs text-slate-400">
+                Track completion percentage, read course materials, and submitted assignments across all 114 students.
+              </p>
+            </div>
+            <button
+              onClick={fetchAdminData}
+              className="text-xs font-bold text-blue-400 hover:text-blue-300 cursor-pointer bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl"
+            >
+              🔄 Sync Live Monitor
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[550px] overflow-y-auto pr-1">
+            {monitorData.map((item) => (
+              <div
+                key={item.matricNo}
+                className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="truncate">
+                    <span className="font-bold text-white text-xs truncate block">{item.fullName}</span>
+                    <span className="font-mono text-[10px] text-blue-400 font-bold">{item.matricNo}</span>
+                  </div>
+                  <span className="text-xs font-mono font-extrabold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded">
+                    {item.progressPercentage}%
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-1.5 rounded-full"
+                    style={{ width: `${item.progressPercentage}%` }}
+                  ></div>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-900">
+                  <span>Notes: {item.notesRead?.length || 0}</span>
+                  <span>Assignments: {item.assignmentsCompleted?.length || 0}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

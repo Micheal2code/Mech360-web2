@@ -1,7 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAudioPlayer } from '../context/AudioContext';
 import { Course, CourseNote, LectureRecording, Assignment, Announcement } from '../types';
+import { api } from '../services/api';
+
+const ENGINEERING_FUN_FACTS = [
+  "The Mercedes-Benz three-pointed star logo represents land, sea, and air dominance in engineering.",
+  "In 1913, the first modern moving assembly line was introduced by Henry Ford, reducing chassis production time from 12 hours to 93 minutes.",
+  "The Rankine cycle is a model used to predict the performance of steam turbine systems, commonly found in thermal power plants.",
+  "The maximum efficiency of any thermodynamic cycle is defined by the Carnot Limit, which depends purely on temperature extremes.",
+  "In fluid mechanics, the Navier-Stokes equations describe how fluids flow. They are so complex that there is a $1,000,000 Millennium Prize for proving their smooth solutions exist.",
+  "Titanium possesses the highest strength-to-weight ratio of any metal, making it a critical material for aerospace and advanced mechanical designs.",
+  "A double-clutch transmission shifts gears in less than 8 milliseconds, which is about 40 times faster than a human blink.",
+  "The world's largest diesel engine, the Wärtsilä-Sulzer RTA96-C, produces 109,000 horsepower and is used in container ships.",
+  "Regenerative braking in hybrid and electric cars converts kinetic energy back into electrical energy during deceleration, saving up to 30% of energy."
+];
 
 interface DashboardViewProps {
   courses: Course[];
@@ -22,6 +35,78 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const { currentUser, isMasterAdmin, canUpload } = useAuth();
   const { playLecture, currentLecture, isPlaying } = useAudioPlayer();
+
+  // Fun Facts state (rotates every minute)
+  const [factIndex, setFactIndex] = useState(0);
+
+  // Student progress state
+  const [studentProgress, setStudentProgress] = useState<{ notesRead: string[]; assignmentsCompleted: string[]; progressPercentage: number }>({
+    notesRead: [],
+    assignmentsCompleted: [],
+    progressPercentage: 15,
+  });
+
+  useEffect(() => {
+    // Rotate fun facts every 60 seconds
+    const factInterval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % ENGINEERING_FUN_FACTS.length);
+    }, 60000);
+
+    // Fetch personal progress
+    if (currentUser?.matricNo) {
+      api.getProgress(currentUser.matricNo)
+        .then((res) => {
+          if (res && res.progress) {
+            setStudentProgress(res.progress);
+          }
+        })
+        .catch((e) => console.error('Failed to load student progress:', e));
+    }
+
+    return () => {
+      clearInterval(factInterval);
+    };
+  }, [currentUser]);
+
+  const toggleNoteRead = async (noteId: string) => {
+    if (!currentUser?.matricNo) return;
+    const isRead = studentProgress.notesRead.includes(noteId);
+    let updatedNotesRead = [...studentProgress.notesRead];
+    if (isRead) {
+      updatedNotesRead = updatedNotesRead.filter((id) => id !== noteId);
+    } else {
+      updatedNotesRead.push(noteId);
+    }
+
+    try {
+      const res = await api.updateProgress(currentUser.matricNo, updatedNotesRead, studentProgress.assignmentsCompleted);
+      if (res && res.progress) {
+        setStudentProgress(res.progress);
+      }
+    } catch (e) {
+      console.error('Failed to update progress:', e);
+    }
+  };
+
+  const toggleAssignmentCompleted = async (assId: string) => {
+    if (!currentUser?.matricNo) return;
+    const isCompleted = studentProgress.assignmentsCompleted.includes(assId);
+    let updatedAssCompleted = [...studentProgress.assignmentsCompleted];
+    if (isCompleted) {
+      updatedAssCompleted = updatedAssCompleted.filter((id) => id !== assId);
+    } else {
+      updatedAssCompleted.push(assId);
+    }
+
+    try {
+      const res = await api.updateProgress(currentUser.matricNo, studentProgress.notesRead, updatedAssCompleted);
+      if (res && res.progress) {
+        setStudentProgress(res.progress);
+      }
+    } catch (e) {
+      console.error('Failed to update progress:', e);
+    }
+  };
 
   const sortedAssignments = [...assignments].sort(
     (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
@@ -351,6 +436,105 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 })}
               </div>
             )}
+          </div>
+
+          {/* Personal Learning Progress Tracker Widget */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📊</span>
+                <h2 className="font-extrabold text-white text-sm">Learning Progress</h2>
+              </div>
+              <span className="text-xs font-mono font-bold text-blue-400">
+                {studentProgress.progressPercentage}%
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-950 rounded-full h-2 border border-slate-800 shadow-inner overflow-hidden">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500 shadow border-r border-blue-400"
+                style={{ width: `${studentProgress.progressPercentage}%` }}
+              ></div>
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-normal">
+              Track your reading & task submissions below. Mark items completed to increase your score!
+            </p>
+
+            <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 pt-1">
+              <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider mb-1">
+                Read Course Notes ({studentProgress.notesRead.length} read)
+              </div>
+              {notes.slice(0, 4).map((n) => {
+                const isRead = studentProgress.notesRead.includes(n.id);
+                return (
+                  <label
+                    key={n.id}
+                    className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/60 border border-slate-900 text-xs text-slate-200 cursor-pointer hover:bg-slate-950 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isRead}
+                      onChange={() => toggleNoteRead(n.id)}
+                      className="rounded border-slate-800 bg-slate-950 text-blue-600 focus:ring-blue-500 cursor-pointer h-3.5 w-3.5"
+                    />
+                    <div className="truncate flex-1">
+                      <span className="font-bold text-slate-100">{n.courseCode}</span>: {n.topic}
+                    </div>
+                  </label>
+                );
+              })}
+
+              <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider mt-3 mb-1">
+                Assignment Submissions ({studentProgress.assignmentsCompleted.length} completed)
+              </div>
+              {assignments.slice(0, 3).map((a) => {
+                const isCompleted = studentProgress.assignmentsCompleted.includes(a.id);
+                return (
+                  <label
+                    key={a.id}
+                    className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/60 border border-slate-900 text-xs text-slate-200 cursor-pointer hover:bg-slate-950 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isCompleted}
+                      onChange={() => toggleAssignmentCompleted(a.id)}
+                      className="rounded border-slate-800 bg-slate-950 text-blue-600 focus:ring-blue-500 cursor-pointer h-3.5 w-3.5"
+                    />
+                    <div className="truncate flex-1">
+                      <span className="font-bold text-slate-100">{a.courseCode}</span>: {a.title}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Random Engineering Fun Facts Widget (Rotates every minute or with a next click button) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💡</span>
+                <h2 className="font-extrabold text-white text-sm">Engineering Fun Fact</h2>
+              </div>
+              <button
+                onClick={() => setFactIndex((prev) => (prev + 1) % ENGINEERING_FUN_FACTS.length)}
+                className="text-[10px] bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold px-2 py-1 rounded border border-slate-700 cursor-pointer"
+                title="Next Fact"
+              >
+                Next ➡️
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-850 min-h-[90px] flex items-center">
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold italic">
+                "{ENGINEERING_FUN_FACTS[factIndex]}"
+              </p>
+            </div>
+            <div className="text-[9px] text-slate-500 text-right uppercase tracking-wider font-mono">
+              Auto-rotates every 60 seconds
+            </div>
           </div>
 
           {/* Featured Audio Recording */}
