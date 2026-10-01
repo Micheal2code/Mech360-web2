@@ -46,111 +46,155 @@ async function safeFetchJson<T>(url: string, options?: RequestInit): Promise<T> 
 
 export const api = {
   // Authentication & Passwords
-  async checkMatric(matricNo: string): Promise<{ success: boolean; matricNo: string; fullName: string; requiresPasswordSetup: boolean }> {
-    try {
-      return await safeFetchJson<{ success: boolean; matricNo: string; fullName: string; requiresPasswordSetup: boolean }>(
-        '/api/auth/check-matric',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ matricNo }),
+  async checkMatric(matricNo: string, level: string = '400'): Promise<{ success: boolean; matricNo: string; fullName: string; requiresPasswordSetup: boolean }> {
+    const normalized = matricNo.trim().toUpperCase();
+    if (level === '400') {
+      try {
+        return await safeFetchJson<{ success: boolean; matricNo: string; fullName: string; requiresPasswordSetup: boolean }>(
+          '/api/auth/check-matric',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matricNo: normalized }),
+          }
+        );
+      } catch (err: any) {
+        if (err instanceof ApiError && err.status !== 404) {
+          throw err;
         }
-      );
-    } catch (err: any) {
-      if (err instanceof ApiError && err.status !== 404) {
-        throw err; // Propagate legitimate validation/access errors (e.g. 401/403/400) immediately
+        const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
+        if (!student) {
+          throw new Error('NO ACCESS: Matriculation number not found in official 400L 114 student register.');
+        }
+        const savedPass = localStorage.getItem('classhub_pass_' + student.matricNo);
+        return {
+          success: true,
+          matricNo: student.matricNo,
+          fullName: student.fullName,
+          requiresPasswordSetup: !savedPass,
+        };
       }
-      // Offline / Static deployment fallback (Netlify)
-      const normalized = matricNo.trim().toUpperCase();
-      const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
-      if (!student) {
-        throw new Error('NO ACCESS: Matriculation number not found in official 114 student register.');
+    } else {
+      // 200L, 300L, 500L: 114 student register does not apply. Accept any valid matric format.
+      if (!normalized || normalized.length < 5) {
+        throw new Error('Please enter a valid matriculation number.');
       }
-      const savedPass = localStorage.getItem('classhub_pass_' + student.matricNo);
+      const savedPass = localStorage.getItem('classhub_pass_' + level + '_' + normalized);
+      const savedName = localStorage.getItem('classhub_name_' + level + '_' + normalized) || `Student (${normalized})`;
       return {
         success: true,
-        matricNo: student.matricNo,
-        fullName: student.fullName,
+        matricNo: normalized,
+        fullName: savedName,
         requiresPasswordSetup: !savedPass,
       };
     }
   },
 
-  async setupPassword(matricNo: string, password: string): Promise<{ success: boolean; user: User }> {
-    try {
-      const res = await safeFetchJson<{ success: boolean; user: User }>('/api/auth/setup-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matricNo, password }),
-      });
-      // Sync locally for offline robustness
-      localStorage.setItem('classhub_pass_' + matricNo.trim().toUpperCase(), password);
-      return res;
-    } catch (err: any) {
-      if (err instanceof ApiError && err.status !== 404) {
-        throw err; // Propagate legitimate validation failures
-      }
-      const normalized = matricNo.trim().toUpperCase();
-      const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
-      if (!student) throw new Error('NO ACCESS: Matriculation number not found.');
-      if (password.length < 4) throw new Error('Password must be at least 4 characters long.');
+  async setupPassword(matricNo: string, password: string, level: string = '400'): Promise<{ success: boolean; user: User }> {
+    const normalized = matricNo.trim().toUpperCase();
+    if (level === '400') {
+      try {
+        const res = await safeFetchJson<{ success: boolean; user: User }>('/api/auth/setup-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matricNo: normalized, password }),
+        });
+        localStorage.setItem('classhub_pass_' + normalized, password);
+        return res;
+      } catch (err: any) {
+        if (err instanceof ApiError && err.status !== 404) {
+          throw err;
+        }
+        const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
+        if (!student) throw new Error('NO ACCESS: Matriculation number not found in 400L register.');
+        if (password.length < 4) throw new Error('Password must be at least 4 characters long.');
 
-      localStorage.setItem('classhub_pass_' + student.matricNo, password);
-      const isMaster = student.matricNo === 'EES/23/24/0456';
-      const savedAssistants: string[] = JSON.parse(localStorage.getItem('classhub_assistant_admins') || '[]');
-      const isAssistant = savedAssistants.includes(student.matricNo);
+        localStorage.setItem('classhub_pass_' + student.matricNo, password);
+        return {
+          success: true,
+          user: {
+            matricNo: student.matricNo,
+            fullName: student.fullName,
+            department: 'Mechanical Engineering',
+            level: '400L',
+            isAdmin: student.matricNo === 'EES/23/24/0456',
+            isPartialAdmin: student.matricNo === 'EES/23/24/0456' || student.isPartialAdmin,
+            avatarEmoji: student.avatarEmoji,
+          },
+        };
+      }
+    } else {
+      if (password.length < 4) throw new Error('Password must be at least 4 characters long.');
+      localStorage.setItem('classhub_pass_' + level + '_' + normalized, password);
+      const studentName = `Student ${normalized}`;
+      localStorage.setItem('classhub_name_' + level + '_' + normalized, studentName);
 
       return {
         success: true,
         user: {
-          matricNo: student.matricNo,
-          fullName: student.fullName,
+          matricNo: normalized,
+          fullName: studentName,
           department: 'Mechanical Engineering',
-          level: student.level,
-          isAdmin: isMaster,
-          isPartialAdmin: isMaster || isAssistant || student.isPartialAdmin,
-          avatarEmoji: student.avatarEmoji,
+          level: `${level}L`,
+          isAdmin: false,
+          isPartialAdmin: false,
+          avatarEmoji: '🎓',
         },
       };
     }
   },
 
-  async loginWithPassword(matricNo: string, password: string): Promise<{ success: boolean; user: User }> {
-    try {
-      const res = await safeFetchJson<{ success: boolean; user: User }>('/api/auth/login-with-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matricNo, password }),
-      });
-      // Dynamic password local update on successful server login
-      localStorage.setItem('classhub_pass_' + matricNo.trim().toUpperCase(), password);
-      return res;
-    } catch (err: any) {
-      if (err instanceof ApiError && err.status !== 404) {
-        throw err; // Propagate legitimate password mismatch (401) immediately!
-      }
-      const normalized = matricNo.trim().toUpperCase();
-      const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
-      if (!student) throw new Error('NO ACCESS: Matriculation number not found.');
+  async loginWithPassword(matricNo: string, password: string, level: string = '400'): Promise<{ success: boolean; user: User }> {
+    const normalized = matricNo.trim().toUpperCase();
+    if (level === '400') {
+      try {
+        const res = await safeFetchJson<{ success: boolean; user: User }>('/api/auth/login-with-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matricNo: normalized, password }),
+        });
+        localStorage.setItem('classhub_pass_' + normalized, password);
+        return res;
+      } catch (err: any) {
+        if (err instanceof ApiError && err.status !== 404) {
+          throw err;
+        }
+        const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
+        if (!student) throw new Error('NO ACCESS: Matriculation number not found.');
 
-      const savedPass = localStorage.getItem('classhub_pass_' + student.matricNo);
+        const savedPass = localStorage.getItem('classhub_pass_' + student.matricNo);
+        if (!savedPass) throw new Error('Account password not configured yet. Please set up your password.');
+        if (savedPass !== password) throw new Error('Incorrect password for this matriculation number.');
+
+        return {
+          success: true,
+          user: {
+            matricNo: student.matricNo,
+            fullName: student.fullName,
+            department: 'Mechanical Engineering',
+            level: '400L',
+            isAdmin: student.matricNo === 'EES/23/24/0456',
+            isPartialAdmin: student.matricNo === 'EES/23/24/0456' || student.isPartialAdmin,
+            avatarEmoji: student.avatarEmoji,
+          },
+        };
+      }
+    } else {
+      const savedPass = localStorage.getItem('classhub_pass_' + level + '_' + normalized);
       if (!savedPass) throw new Error('Account password not configured yet. Please set up your password.');
       if (savedPass !== password) throw new Error('Incorrect password for this matriculation number.');
 
-      const isMaster = student.matricNo === 'EES/23/24/0456';
-      const savedAssistants: string[] = JSON.parse(localStorage.getItem('classhub_assistant_admins') || '[]');
-      const isAssistant = savedAssistants.includes(student.matricNo);
-
+      const studentName = localStorage.getItem('classhub_name_' + level + '_' + normalized) || `Student ${normalized}`;
       return {
         success: true,
         user: {
-          matricNo: student.matricNo,
-          fullName: student.fullName,
+          matricNo: normalized,
+          fullName: studentName,
           department: 'Mechanical Engineering',
-          level: student.level,
-          isAdmin: isMaster,
-          isPartialAdmin: isMaster || isAssistant || student.isPartialAdmin,
-          avatarEmoji: student.avatarEmoji,
+          level: `${level}L`,
+          isAdmin: false,
+          isPartialAdmin: false,
+          avatarEmoji: '🎓',
         },
       };
     }

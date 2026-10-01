@@ -13,9 +13,10 @@ interface TutorMessage {
 
 interface AITutorViewProps {
   courses: Course[];
+  level?: string;
 }
 
-export const AITutorView: React.FC<AITutorViewProps> = ({ courses }) => {
+export const AITutorView: React.FC<AITutorViewProps> = ({ courses, level = '400' }) => {
   const { currentUser } = useAuth();
 
   const [promptInput, setPromptInput] = useState('');
@@ -23,7 +24,7 @@ export const AITutorView: React.FC<AITutorViewProps> = ({ courses }) => {
     {
       id: 'init-1',
       sender: 'ai',
-      text: `Hello ${currentUser?.fullName || 'there'}! 🤖 I am your ClassHub General AI Assistant.\n\nYou can ask me ANY question on ANY topic — mathematics, science, engineering, software development, essay writing, history, career guidance, study strategies, or general trivia. How can I help you today?`,
+      text: `Hello ${currentUser?.fullName || 'there'}! 🤖 I am your ${level}L Mechanical Engineering AI Tutor.\n\nYou can ask me ANY question on your ${level}L course modules, formulas, thermodynamics, fluids, machine design, or general engineering topics. How can I assist your study today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);

@@ -11,6 +11,8 @@ interface NavbarProps {
   notes?: CourseNote[];
   recordings?: LectureRecording[];
   assignments?: Assignment[];
+  selectedLevel?: string | null;
+  onSwitchLevel?: () => void;
   onNavigate?: (tab: string, extra?: any) => void;
   onOpenAuth: () => void;
   onOpenProfile: () => void;
@@ -24,6 +26,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   notes = [],
   recordings = [],
   assignments = [],
+  selectedLevel = '400',
+  onSwitchLevel,
   onNavigate,
   onOpenAuth,
   onOpenProfile,
@@ -160,6 +164,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
                 </button>
+
+                {/* Switch Academic Level Button */}
+                {onSwitchLevel && (
+                  <button
+                    onClick={onSwitchLevel}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-950/80 hover:bg-blue-900 text-blue-200 hover:text-white rounded-xl border border-blue-700/80 text-xs font-black cursor-pointer transition-all shadow-sm"
+                    title="Change Academic Level (200L / 300L / 400L / 500L)"
+                  >
+                    <span>🎓</span>
+                    <span className="hidden sm:inline text-blue-300 font-extrabold">{selectedLevel}L</span>
+                    <span className="text-[10px] text-blue-400">⇄</span>
+                  </button>
+                )}
 
                 {/* Global Search Button */}
                 <button

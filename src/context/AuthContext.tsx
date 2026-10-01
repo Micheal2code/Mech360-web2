@@ -7,9 +7,9 @@ interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  checkMatric: (matricNo: string) => Promise<{ matricNo: string; fullName: string; requiresPasswordSetup: boolean }>;
-  setupPassword: (matricNo: string, password: string) => Promise<User>;
-  loginWithPassword: (matricNo: string, password: string) => Promise<User>;
+  checkMatric: (matricNo: string, level?: string) => Promise<{ matricNo: string; fullName: string; requiresPasswordSetup: boolean }>;
+  setupPassword: (matricNo: string, password: string, level?: string) => Promise<User>;
+  loginWithPassword: (matricNo: string, password: string, level?: string) => Promise<User>;
   loginAsAdminQuick: (pin: string) => Promise<void>;
   logout: () => void;
   isMasterAdmin: boolean;
@@ -88,6 +88,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 avatarEmoji: student.avatarEmoji,
               };
               setCurrentUser(fallbackUser);
+            } else {
+              // Non-400L fallback session user
+              const levelPrefix = localStorage.getItem('mee_selected_level') || '200';
+              const fallbackUser: User = {
+                matricNo: normalized,
+                fullName: localStorage.getItem('classhub_name_' + levelPrefix + '_' + normalized) || `Student (${normalized})`,
+                department: 'Mechanical Engineering',
+                level: `${levelPrefix}L`,
+                isAdmin: false,
+                isPartialAdmin: false,
+                avatarEmoji: '🎓',
+              };
+              setCurrentUser(fallbackUser);
             }
           }
         }
@@ -131,15 +144,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [currentUser]);
 
-  const checkMatric = async (matricNo: string) => {
-    return await api.checkMatric(matricNo);
+  const checkMatric = async (matricNo: string, level: string = '400') => {
+    return await api.checkMatric(matricNo, level);
   };
 
-  const setupPassword = async (matricNo: string, password: string) => {
-    const res = await api.setupPassword(matricNo, password);
+  const setupPassword = async (matricNo: string, password: string, level: string = '400') => {
+    const res = await api.setupPassword(matricNo, password, level);
     if (res.success && res.user) {
       setCurrentUser(res.user);
-      // Store only secure session object with no full credentials in local storage (complying with rule 7)
       const sessionObj = { matricNo: res.user.matricNo, isLoggedIn: true, timestamp: Date.now() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionObj));
       return res.user;
@@ -147,11 +159,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     throw new Error('Failed to setup password');
   };
 
-  const loginWithPassword = async (matricNo: string, password: string) => {
-    const res = await api.loginWithPassword(matricNo, password);
+  const loginWithPassword = async (matricNo: string, password: string, level: string = '400') => {
+    const res = await api.loginWithPassword(matricNo, password, level);
     if (res.success && res.user) {
       setCurrentUser(res.user);
-      // Store only secure session object with no full credentials in local storage (complying with rule 7)
       const sessionObj = { matricNo: res.user.matricNo, isLoggedIn: true, timestamp: Date.now() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionObj));
       return res.user;

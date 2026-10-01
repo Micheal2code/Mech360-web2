@@ -106,8 +106,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMsg('');
     setLoading(true);
 
+    const currentLevel = localStorage.getItem('mee_selected_level') || '400';
+
     try {
-      const res = await checkMatric(matricInput.trim().toUpperCase());
+      const res = await checkMatric(matricInput.trim().toUpperCase(), currentLevel);
       setStudentInfo({ matricNo: res.matricNo, fullName: res.fullName });
 
       // Store pending matric and perform page refresh BEFORE login
@@ -145,8 +147,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMsg('');
     setLoading(true);
 
+    const currentLevel = localStorage.getItem('mee_selected_level') || '400';
+
     try {
-      const user = await setupPassword(studentInfo.matricNo, passwordInput);
+      const user = await setupPassword(studentInfo.matricNo, passwordInput, currentLevel);
       setSuccessMsg(`Welcome, ${user.fullName}! Password configured successfully. Refreshing page...`);
       setLoginAttempts(0);
       setTimeout(() => {
@@ -174,8 +178,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMsg('');
     setLoading(true);
 
+    const currentLevel = localStorage.getItem('mee_selected_level') || '400';
+
     try {
-      const user = await loginWithPassword(studentInfo.matricNo, passwordInput);
+      const user = await loginWithPassword(studentInfo.matricNo, passwordInput, currentLevel);
       setSuccessMsg(`Welcome, ${user.fullName}! Access granted. Refreshing page...`);
       setLoginAttempts(0);
       setTimeout(() => {
