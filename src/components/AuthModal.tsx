@@ -316,7 +316,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 ClassHub Authentication
               </h3>
               <p className="text-[11px] font-semibold text-slate-400">
-                Verified 114 Student Database • Secure Portal
+                {(() => {
+                  const lvl = typeof window !== 'undefined' ? localStorage.getItem('mee_selected_level') || '400' : '400';
+                  return lvl === '400' ? 'Verified 114 Student Database • Secure Portal' : `${lvl}L Student Record Database • Secure Portal`;
+                })()}
               </p>
             </div>
           </div>
