@@ -6,6 +6,7 @@ import { AudioPlayerDock } from './components/AudioPlayerDock';
 import { AuthModal } from './components/AuthModal';
 import { ProfileModal } from './components/ProfileModal';
 import blueprintBg from './assets/images/mechanical_blueprint_1790878784682.jpg';
+import benzBg from './assets/images/benz_engineering_bg_1790892027687.jpg';
 
 import { DashboardView } from './views/DashboardView';
 import { AnnouncementsView } from './views/AnnouncementsView';
@@ -89,7 +90,7 @@ const AppContent: React.FC = () => {
     return (
       <div 
         className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center relative"
-        style={{ backgroundImage: `url(${blueprintBg})` }}
+        style={{ backgroundImage: `url(${benzBg})` }}
       >
         {/* Dark focused backdrop overlay */}
         <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-0"></div>

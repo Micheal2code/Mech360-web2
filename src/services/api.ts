@@ -832,4 +832,52 @@ export const api = {
       };
     }
   },
+
+  async forgotPassword(matricNo: string): Promise<{ success: boolean; message: string }> {
+    return await safeFetchJson<{ success: boolean; message: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricNo }),
+    });
+  },
+
+  async resetWithCode(matricNo: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    return await safeFetchJson<{ success: boolean; message: string }>('/api/auth/reset-with-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricNo, code, newPassword }),
+    });
+  },
+
+  async getAdminResetCodes(adminMatric: string): Promise<{ requests: any[] }> {
+    return await safeFetchJson<{ requests: any[] }>(`/api/admin/password-reset-codes?adminMatric=${encodeURIComponent(adminMatric)}`);
+  },
+
+  async getProgress(matricNo: string): Promise<{ progress: any }> {
+    try {
+      return await safeFetchJson<{ progress: any }>(`/api/progress?matricNo=${encodeURIComponent(matricNo)}`);
+    } catch {
+      return { progress: { matricNo, notesRead: [], assignmentsCompleted: [], progressPercentage: 15 } };
+    }
+  },
+
+  async updateProgress(matricNo: string, notesRead?: string[], assignmentsCompleted?: string[]): Promise<{ success: boolean; progress: any }> {
+    try {
+      return await safeFetchJson<{ success: boolean; progress: any }>('/api/progress/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matricNo, notesRead, assignmentsCompleted }),
+      });
+    } catch {
+      return { success: true, progress: { matricNo, notesRead: [], assignmentsCompleted: [], progressPercentage: 15 } };
+    }
+  },
+
+  async getProgressMonitor(adminMatric: string): Promise<{ monitor: any[] }> {
+    try {
+      return await safeFetchJson<{ monitor: any[] }>(`/api/admin/progress-monitor?adminMatric=${encodeURIComponent(adminMatric)}`);
+    } catch {
+      return { monitor: [] };
+    }
+  },
 };
