@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { StudentRecord } from '../data/rosterData';
-import { AuditLog, Course, CourseNote, StudentPasswordRecord, Assignment, PdfRequest } from '../types';
+import { AuditLog, Course, CourseNote, LectureRecording, StudentPasswordRecord, Assignment, PdfRequest } from '../types';
 import { api } from '../services/api';
 
 interface AdminPortalViewProps {
   courses: Course[];
+  notes?: CourseNote[];
+  recordings?: LectureRecording[];
   assignments: Assignment[];
   pdfRequests: PdfRequest[];
-  onRefreshAll: () => void;
+  onRefreshAll: () => Promise<void> | void;
 }
 
-export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assignments, pdfRequests, onRefreshAll }) => {
+export const AdminPortalView: React.FC<AdminPortalViewProps> = ({
+  courses,
+  notes = [],
+  recordings = [],
+  assignments,
+  pdfRequests,
+  onRefreshAll,
+}) => {
   const { currentUser, isMasterAdmin, isAssistantAdmin, canUpload } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'courses' | 'upload-note' | 'upload-audio' | 'assignment' | 'broadcast' | 'roster' | 'assistants' | 'passwords' | 'audit' | 'reset-codes' | 'progress-monitor'>('courses');
@@ -27,6 +36,61 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState('');
+  const [savingAll, setSavingAll] = useState(false);
+  const [saveAllMessage, setSaveAllMessage] = useState('');
+  const [lastSavedTime, setLastSavedTime] = useState<string>('');
+
+  const syncAndSaveAll = async (customMsg?: string) => {
+    if (!currentUser?.matricNo) return;
+    try {
+      setSavingAll(true);
+      const res = await api.saveAllChanges({
+        adminMatric: currentUser.matricNo,
+      });
+      await onRefreshAll();
+      await fetchAdminData();
+      const msg = customMsg || res?.message || '✅ All changes permanently saved to database and synced!';
+      setSaveAllMessage(msg);
+      setLastSavedTime(new Date().toLocaleTimeString());
+      setTimeout(() => setSaveAllMessage(''), 8000);
+    } catch (e: any) {
+      console.error('Save all changes error:', e);
+      setSaveAllMessage('❌ Failed to save changes to database.');
+      setTimeout(() => setSaveAllMessage(''), 5000);
+    } finally {
+      setSavingAll(false);
+    }
+  };
+
+  const handleSaveAllChanges = async () => {
+    await syncAndSaveAll('✅ All changes permanently saved to database and synced across portals!');
+  };
+
+  const handleClearSection = async (section: 'courses' | 'notes' | 'recordings' | 'assignments') => {
+    if (!currentUser?.matricNo) return;
+    const nameMap = {
+      courses: 'all departmental courses',
+      notes: 'all course lecture notes',
+      recordings: 'all lecture audio recordings',
+      assignments: 'all course assignments & deadlines',
+    };
+    if (!confirm(`Are you sure you want to clear ${nameMap[section]}? This will be permanently saved to database once processed.`)) return;
+    try {
+      setLoading(true);
+      await api.clearSection({
+        adminMatric: currentUser.matricNo,
+        section,
+      });
+      await onRefreshAll();
+      await syncAndSaveAll(`✅ Cleared ${nameMap[section]} and permanently saved to database!`);
+      setActionSuccess(`Cleared ${nameMap[section]} successfully!`);
+      setTimeout(() => setActionSuccess(''), 4000);
+    } catch (e: any) {
+      alert(e.message || 'Failed to clear section');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Add Course Form State
   const [courseCode, setCourseCode] = useState('');
@@ -134,9 +198,10 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
     if (!currentUser?.matricNo || !isMasterAdmin) return;
     try {
       setLoading(true);
+      const addedCode = courseCode.trim().toUpperCase();
       await api.addCourse({
         adminMatric: currentUser.matricNo,
-        code: courseCode.trim().toUpperCase(),
+        code: addedCode,
         title: courseTitle.trim(),
         units: Number(courseUnits) || 3,
         lecturer: courseLecturer.trim() || 'Department Lecturer',
@@ -144,13 +209,15 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         iconEmoji: courseEmoji || '⚙️',
       });
 
-      setActionSuccess(`Course ${courseCode.toUpperCase()} added successfully!`);
       setCourseCode('');
       setCourseTitle('');
       setCourseLecturer('');
       setCourseDescription('');
-      onRefreshAll();
-      setTimeout(() => setActionSuccess(''), 3000);
+      
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Course ${addedCode} added & permanently established in database!`);
+      setActionSuccess(`Course ${addedCode} added and saved permanently!`);
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (e: any) {
       alert(e.message || 'Failed to add course');
     } finally {
@@ -160,12 +227,16 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
 
   const handleDeleteCourse = async (code: string) => {
     if (!currentUser?.matricNo || !isMasterAdmin) return;
-    if (!confirm(`Are you sure you want to delete course ${code}?`)) return;
+    if (!confirm(`Are you sure you want to delete course ${code}? This will be permanently saved to database.`)) return;
     try {
+      setLoading(true);
       await api.deleteCourse(code, currentUser.matricNo);
-      onRefreshAll();
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Course ${code} deleted & permanently saved to database!`);
     } catch (e: any) {
       alert(e.message || 'Failed to delete course');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,9 +247,10 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
     try {
       setLoading(true);
       const selectedCourse = courses.find((c) => c.code === uploadCourseCode);
+      const noteCourse = uploadCourseCode || (courses[0]?.code ?? 'MEE 401');
       await api.uploadNote({
         matricNo: currentUser.matricNo,
-        courseCode: uploadCourseCode || 'MEE 401',
+        courseCode: noteCourse,
         courseTitle: selectedCourse?.title || 'Mechanical Engineering Course',
         topic: uploadTopic.trim(),
         lecturer: uploadLecturer.trim() || selectedCourse?.lecturer || 'Department Lecturer',
@@ -188,15 +260,32 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         semester: uploadSemester,
       } as any);
 
-      setActionSuccess('Course note published to repository successfully!');
       setUploadTopic('');
       setUploadSummary('');
       setUploadFullContent('');
       setUploadTags('');
-      onRefreshAll();
-      setTimeout(() => setActionSuccess(''), 3000);
+      
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll('✅ Course note published & permanently saved to database!');
+      setActionSuccess('Course note published & saved permanently!');
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (e: any) {
       alert(e.message || 'Failed to upload note');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string, topic: string) => {
+    if (!currentUser?.matricNo) return;
+    if (!confirm(`Are you sure you want to delete note "${topic}"? This will be permanently saved to database.`)) return;
+    try {
+      setLoading(true);
+      await api.deleteNote(noteId, currentUser.matricNo);
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Note "${topic}" deleted & permanently saved to database!`);
+    } catch (e: any) {
+      alert(e.message || 'Failed to delete note');
     } finally {
       setLoading(false);
     }
@@ -224,7 +313,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
 
       await api.uploadRecording({
         matricNo: currentUser.matricNo,
-        courseCode: audioCourseCode || 'MEE 401',
+        courseCode: audioCourseCode || (courses[0]?.code ?? 'MEE 401'),
         topic: audioTopic.trim(),
         lecturer: audioLecturer.trim() || 'Department Lecturer',
         duration: audioDuration.trim() || '25:00',
@@ -234,14 +323,31 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         semester: audioSemester,
       } as any);
 
-      setActionSuccess('Lecture audio uploaded successfully!');
       setAudioTopic('');
       setAudioLecturer('');
       setAudioNotes('');
-      onRefreshAll();
-      setTimeout(() => setActionSuccess(''), 3000);
+      
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll('✅ Lecture audio uploaded & permanently saved to database!');
+      setActionSuccess('Lecture audio uploaded & saved permanently!');
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (e: any) {
       alert(e.message || 'Failed to upload recording');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAudio = async (recId: string, topic: string) => {
+    if (!currentUser?.matricNo) return;
+    if (!confirm(`Are you sure you want to delete audio recording "${topic}"? This will be permanently saved to database.`)) return;
+    try {
+      setLoading(true);
+      await api.deleteRecording(recId, currentUser.matricNo);
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Audio "${topic}" deleted & permanently saved to database!`);
+    } catch (e: any) {
+      alert(e.message || 'Failed to delete recording');
     } finally {
       setLoading(false);
     }
@@ -253,10 +359,11 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
     if (!currentUser?.matricNo) return;
     try {
       setLoading(true);
+      const postTitle = assTitle.trim();
       await api.createAssignment({
         matricNo: currentUser.matricNo,
-        courseCode: assCourseCode || 'MEE 401',
-        title: assTitle.trim(),
+        courseCode: assCourseCode || (courses[0]?.code ?? 'MEE 401'),
+        title: postTitle,
         description: assDescription.trim(),
         deadline: assDeadline ? new Date(assDeadline).toISOString() : new Date(Date.now() + 86400000 * 5).toISOString(),
         points: Number(assPoints) || 20,
@@ -265,14 +372,31 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         semester: assSemester,
       } as any);
 
-      setActionSuccess('Assignment posted successfully!');
       setAssTitle('');
       setAssDescription('');
       setAssAttachment('');
-      onRefreshAll();
-      setTimeout(() => setActionSuccess(''), 3000);
+      
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Assignment "${postTitle}" posted & permanently saved to database!`);
+      setActionSuccess('Assignment posted & saved permanently!');
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (e: any) {
       alert(e.message || 'Failed to create assignment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (assId: string, title: string) => {
+    if (!currentUser?.matricNo) return;
+    if (!confirm(`Are you sure you want to delete assignment "${title}"? This will be permanently saved to database.`)) return;
+    try {
+      setLoading(true);
+      await api.deleteAssignment(assId, currentUser.matricNo);
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Assignment "${title}" deleted & permanently saved to database!`);
+    } catch (e: any) {
+      alert(e.message || 'Failed to delete assignment');
     } finally {
       setLoading(false);
     }
@@ -292,11 +416,13 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         courseCode: broadcastCourse || undefined,
       });
 
-      setActionSuccess('Broadcast announcement transmitted to all 114 students!');
       setBroadcastTitle('');
       setBroadcastMessage('');
-      onRefreshAll();
-      setTimeout(() => setActionSuccess(''), 3000);
+      
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll('✅ Broadcast announcement transmitted & permanently saved to database!');
+      setActionSuccess('Broadcast announcement transmitted to all 114 students!');
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (e: any) {
       alert(e.message || 'Failed to send broadcast');
     } finally {
@@ -307,10 +433,15 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
   const handleToggleUploadRole = async (targetMatric: string, grant: boolean) => {
     if (!currentUser?.matricNo || !isMasterAdmin) return;
     try {
+      setLoading(true);
       await api.toggleUploadPermission(currentUser.matricNo, targetMatric, grant);
       await fetchAdminData();
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Upload permission updated & permanently saved to database!`);
     } catch (e: any) {
       alert(e.message || 'Failed to toggle upload permission');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -324,11 +455,13 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
         resetModalStudent.matricNo,
         newPasswordInput.trim()
       );
-      setActionSuccess(`Password reset successfully for ${resetModalStudent.fullName}!`);
       setResetModalStudent(null);
       setNewPasswordInput('');
       await fetchAdminData();
-      setTimeout(() => setActionSuccess(''), 3000);
+      // Auto-save all changes to database to prevent state loss on refresh
+      await syncAndSaveAll(`✅ Password reset & permanently saved to database!`);
+      setActionSuccess(`Password reset successfully & saved to database!`);
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (err: any) {
       alert(err.message || 'Failed to reset password');
     } finally {
@@ -371,8 +504,41 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+        {/* Quick Save All Changes Action & Status */}
+        <div className="flex flex-col sm:flex-row items-center gap-2 self-start md:self-center">
+          {saveAllMessage ? (
+            <span className="text-xs text-emerald-300 font-bold bg-emerald-950/90 px-3 py-1.5 rounded-xl border border-emerald-600 animate-pulse text-center">
+              {saveAllMessage}
+            </span>
+          ) : lastSavedTime ? (
+            <span className="text-[11px] text-slate-400 font-mono bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+              Synced: {lastSavedTime}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={handleSaveAllChanges}
+            disabled={savingAll}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 text-white rounded-xl text-xs font-black border border-emerald-400 shadow-lg cursor-pointer flex items-center gap-1.5 transition-all"
+            title="Force-sync and establish all state in the database"
+          >
+            {savingAll ? (
+              <>
+                <span className="animate-spin text-sm">🔄</span>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <span>💾</span>
+                <span>Save All Changes</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex flex-wrap gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
           <button
             onClick={() => setActiveTab('courses')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
@@ -489,7 +655,6 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
             </>
           )}
         </div>
-      </div>
 
       {actionSuccess && (
         <div className="bg-emerald-950 border border-emerald-700 text-emerald-200 p-3 rounded-xl text-xs font-bold text-center">
@@ -610,9 +775,20 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
                 <span className="text-xl">📋</span>
                 <h2 className="font-extrabold text-white text-base">Configured Departmental Courses</h2>
               </div>
-              <span className="text-xs text-slate-400 font-mono font-bold">
-                {courses.length} Courses
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-mono font-bold">
+                  {courses.length} Courses
+                </span>
+                {courses.length > 0 && isMasterAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleClearSection('courses')}
+                    className="px-2.5 py-1 bg-red-950 text-red-300 hover:bg-red-900 border border-red-800 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    🗑️ Clear All
+                  </button>
+                )}
+              </div>
             </div>
 
             {courses.length === 0 ? (
@@ -663,379 +839,578 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
 
       {/* Tab: Upload Course Notes */}
       {activeTab === 'upload-note' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4 max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <span className="text-xl">📚</span>
-            <div>
-              <h2 className="font-extrabold text-white text-base">Upload Official Course Note</h2>
-              <p className="text-xs text-slate-400">Accessible to Master Admin & Assistant Admins (Upload Only)</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleUploadNoteSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
+              <span className="text-xl">📚</span>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Target Course</label>
-                {courses.length > 0 ? (
-                  <select
-                    value={uploadCourseCode}
-                    onChange={(e) => setUploadCourseCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
-                  >
-                    {courses.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code} - {c.title}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+                <h2 className="font-extrabold text-white text-base">Upload Official Course Note</h2>
+                <p className="text-xs text-slate-400">Accessible to Master Admin & Assistant Admins (Upload Only)</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUploadNoteSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Target Course</label>
+                  {courses.length > 0 ? (
+                    <select
+                      value={uploadCourseCode}
+                      onChange={(e) => setUploadCourseCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} - {c.title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. MEE 401"
+                      value={uploadCourseCode}
+                      onChange={(e) => setUploadCourseCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-white uppercase"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Lecturer</label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. MEE 401"
-                    value={uploadCourseCode}
-                    onChange={(e) => setUploadCourseCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-white uppercase"
+                    placeholder="e.g. Prof. S. O. Adeyemi"
+                    value={uploadLecturer}
+                    onChange={(e) => setUploadLecturer(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Topic / Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rankine Cycle Exergy Destruction Derivation"
+                  value={uploadTopic}
+                  onChange={(e) => setUploadTopic(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Executive Summary</label>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="Brief summary of concepts..."
+                  value={uploadSummary}
+                  onChange={(e) => setUploadSummary(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Full Content / Equations</label>
+                <textarea
+                  rows={4}
+                  placeholder="Formulas, step-by-step mathematical derivations (Markdown)..."
+                  value={uploadFullContent}
+                  onChange={(e) => setUploadFullContent(e.target.value)}
+                  className="w-full font-mono bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-emerald-300 placeholder-slate-600 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Tags (Comma separated)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Exergy, Rankine, Boiler"
+                    value={uploadTags}
+                    onChange={(e) => setUploadTags(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
+                  <select
+                    value={uploadSemester}
+                    onChange={(e) => setUploadSemester(e.target.value as any)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                  >
+                    <option value="Harmattan Semester">🍂 Harmattan Semester</option>
+                    <option value="Rain Semester">🌧️ Rain Semester</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold border border-blue-400 shadow cursor-pointer transition-colors"
+              >
+                {loading ? 'Publishing...' : '📤 Publish Note to Repository'}
+              </button>
+            </form>
+          </div>
+
+          {/* Current Notes List */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📚</span>
+                <h2 className="font-extrabold text-white text-base">Uploaded Course Notes</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-mono font-bold">
+                  {notes.length} Notes
+                </span>
+                {notes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleClearSection('notes')}
+                    className="px-2.5 py-1 bg-red-950 text-red-300 hover:bg-red-900 border border-red-800 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    🗑️ Clear All
+                  </button>
                 )}
+              </div>
+            </div>
+
+            {notes.length === 0 ? (
+              <div className="bg-slate-950 p-8 rounded-2xl border border-slate-800 text-center text-slate-400">
+                <span className="text-3xl">📚</span>
+                <p className="font-bold text-sm text-slate-200 mt-2">No notes uploaded yet</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Use the upload form on the left to add your first lecture note!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                {notes.map((n) => (
+                  <div
+                    key={n.id}
+                    className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-blue-400 font-mono">{n.courseCode}</span>
+                        <span className="text-[10px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-800">
+                          {n.timestamp || 'Uploaded'}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white mt-1">{n.topic}</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">{n.summary}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono">By: {n.uploadedByName || n.uploadedBy}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNote(n.id, n.topic)}
+                      className="p-1.5 bg-red-950 hover:bg-red-900 text-red-300 rounded-lg border border-red-800 text-xs cursor-pointer shrink-0"
+                      title="Delete Note"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Upload Lecture Audio */}
+      {activeTab === 'upload-audio' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
+              <span className="text-xl">🎧</span>
+              <div>
+                <h2 className="font-extrabold text-white text-base">Upload Lecture Audio / Voice Note</h2>
+                <p className="text-xs text-slate-400">Streamed via the class audio player</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUploadAudioSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Course</label>
+                  {courses.length > 0 ? (
+                    <select
+                      value={audioCourseCode}
+                      onChange={(e) => setAudioCourseCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} - {c.title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. MEE 401"
+                      value={audioCourseCode}
+                      onChange={(e) => setAudioCourseCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-white uppercase"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Duration (MM:SS)</label>
+                  <input
+                    type="text"
+                    placeholder="25:00"
+                    value={audioDuration}
+                    onChange={(e) => setAudioDuration(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Audio Lecture Title / Topic</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Navier-Stokes Boundary Layer Simplifications"
+                  value={audioTopic}
+                  onChange={(e) => setAudioTopic(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-semibold"
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">Lecturer</label>
                 <input
                   type="text"
-                  placeholder="e.g. Prof. S. O. Adeyemi"
-                  value={uploadLecturer}
-                  onChange={(e) => setUploadLecturer(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Topic / Title</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Rankine Cycle Exergy Destruction Derivation"
-                value={uploadTopic}
-                onChange={(e) => setUploadTopic(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-semibold"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Executive Summary</label>
-              <textarea
-                rows={2}
-                required
-                placeholder="Brief summary of concepts..."
-                value={uploadSummary}
-                onChange={(e) => setUploadSummary(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Full Content / Equations</label>
-              <textarea
-                rows={4}
-                placeholder="Formulas, step-by-step mathematical derivations (Markdown)..."
-                value={uploadFullContent}
-                onChange={(e) => setUploadFullContent(e.target.value)}
-                className="w-full font-mono bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-emerald-300 placeholder-slate-600 focus:outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Tags (Comma separated)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Exergy, Rankine, Boiler"
-                  value={uploadTags}
-                  onChange={(e) => setUploadTags(e.target.value)}
+                  placeholder="e.g. Dr. C. N. Okonkwo"
+                  value={audioLecturer}
+                  onChange={(e) => setAudioLecturer(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
-                <select
-                  value={uploadSemester}
-                  onChange={(e) => setUploadSemester(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
-                >
-                  <option value="Harmattan Semester">🍂 Harmattan Semester</option>
-                  <option value="Rain Semester">🌧️ Rain Semester</option>
-                </select>
+                <label className="block text-xs font-bold text-slate-300 mb-1">
+                  Timestamps (Format: MM:SS - Label, one per line)
+                </label>
+                <textarea
+                  rows={3}
+                  value={audioTimestampsText}
+                  onChange={(e) => setAudioTimestampsText(e.target.value)}
+                  className="w-full font-mono bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-blue-300 focus:outline-none"
+                />
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold border border-blue-400 shadow cursor-pointer transition-colors"
-            >
-              {loading ? 'Publishing...' : '📤 Publish Note to Repository'}
-            </button>
-          </form>
-        </div>
-      )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Lecture Transcript / Notes</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Summary of audio recording..."
+                    value={audioNotes}
+                    onChange={(e) => setAudioNotes(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+                  />
+                </div>
 
-      {/* Tab: Upload Lecture Audio */}
-      {activeTab === 'upload-audio' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4 max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <span className="text-xl">🎧</span>
-            <div>
-              <h2 className="font-extrabold text-white text-base">Upload Lecture Audio / Voice Note</h2>
-              <p className="text-xs text-slate-400">Streamed via the class audio player</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleUploadAudioSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Course</label>
-                {courses.length > 0 ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
                   <select
-                    value={audioCourseCode}
-                    onChange={(e) => setAudioCourseCode(e.target.value)}
+                    value={audioSemester}
+                    onChange={(e) => setAudioSemester(e.target.value as any)}
                     className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
                   >
-                    {courses.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code} - {c.title}
-                      </option>
-                    ))}
+                    <option value="Harmattan Semester">🍂 Harmattan Semester</option>
+                    <option value="Rain Semester">🌧️ Rain Semester</option>
                   </select>
-                ) : (
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. MEE 401"
-                    value={audioCourseCode}
-                    onChange={(e) => setAudioCourseCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-white uppercase"
-                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold border border-blue-400 shadow cursor-pointer transition-colors"
+              >
+                {loading ? 'Uploading...' : '🎙️ Upload Audio Recording'}
+              </button>
+            </form>
+          </div>
+
+          {/* Current Audio Recordings List */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🎧</span>
+                <h2 className="font-extrabold text-white text-base">Uploaded Audio Recordings</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-mono font-bold">
+                  {recordings.length} Recordings
+                </span>
+                {recordings.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleClearSection('recordings')}
+                    className="px-2.5 py-1 bg-red-950 text-red-300 hover:bg-red-900 border border-red-800 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    🗑️ Clear All
+                  </button>
                 )}
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Duration (MM:SS)</label>
-                <input
-                  type="text"
-                  placeholder="25:00"
-                  value={audioDuration}
-                  onChange={(e) => setAudioDuration(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                />
+            {recordings.length === 0 ? (
+              <div className="bg-slate-950 p-8 rounded-2xl border border-slate-800 text-center text-slate-400">
+                <span className="text-3xl">🎧</span>
+                <p className="font-bold text-sm text-slate-200 mt-2">No audio recordings uploaded yet</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Use the form on the left to upload your first lecture audio!
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                {recordings.map((r) => (
+                  <div
+                    key={r.id}
+                    className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-purple-400 font-mono">{r.courseCode}</span>
+                        <span className="text-[10px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-800">
+                          ⏱️ {r.duration || '25:00'}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white mt-1">{r.topic}</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Lecturer: {r.lecturer}</p>
+                    </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Audio Lecture Title / Topic</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Navier-Stokes Boundary Layer Simplifications"
-                value={audioTopic}
-                onChange={(e) => setAudioTopic(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-semibold"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Lecturer</label>
-              <input
-                type="text"
-                placeholder="e.g. Dr. C. N. Okonkwo"
-                value={audioLecturer}
-                onChange={(e) => setAudioLecturer(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Timestamps (Format: MM:SS - Label, one per line)
-              </label>
-              <textarea
-                rows={3}
-                value={audioTimestampsText}
-                onChange={(e) => setAudioTimestampsText(e.target.value)}
-                className="w-full font-mono bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-blue-300 focus:outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Lecture Transcript / Notes</label>
-                <textarea
-                  rows={2}
-                  placeholder="Summary of audio recording..."
-                  value={audioNotes}
-                  onChange={(e) => setAudioNotes(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-                />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAudio(r.id, r.topic)}
+                      className="p-1.5 bg-red-950 hover:bg-red-900 text-red-300 rounded-lg border border-red-800 text-xs cursor-pointer shrink-0"
+                      title="Delete Audio"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
-                <select
-                  value={audioSemester}
-                  onChange={(e) => setAudioSemester(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
-                >
-                  <option value="Harmattan Semester">🍂 Harmattan Semester</option>
-                  <option value="Rain Semester">🌧️ Rain Semester</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold border border-blue-400 shadow cursor-pointer transition-colors"
-            >
-              {loading ? 'Uploading...' : '🎙️ Upload Audio Recording'}
-            </button>
-          </form>
+            )}
+          </div>
         </div>
       )}
 
       {/* Tab: Post Assignment */}
       {activeTab === 'assignment' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4 max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <span className="text-xl">📅</span>
-            <div>
-              <h2 className="font-extrabold text-white text-base">Post Course Assignment</h2>
-              <p className="text-xs text-slate-400">Sets deadline countdown on student dashboards</p>
-            </div>
-          </div>
-
-          <form onSubmit={handlePostAssignmentSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
+              <span className="text-xl">📅</span>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Course</label>
-                {courses.length > 0 ? (
-                  <select
-                    value={assCourseCode}
-                    onChange={(e) => setAssCourseCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
-                  >
-                    {courses.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code} - {c.title}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+                <h2 className="font-extrabold text-white text-base">Post Course Assignment</h2>
+                <p className="text-xs text-slate-400">Sets deadline countdown on student dashboards</p>
+              </div>
+            </div>
+
+            <form onSubmit={handlePostAssignmentSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Course</label>
+                  {courses.length > 0 ? (
+                    <select
+                      value={assCourseCode}
+                      onChange={(e) => setAssCourseCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} - {c.title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. MEE 401"
+                      value={assCourseCode}
+                      onChange={(e) => setAssCourseCode(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-white uppercase"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Max Score (Points)</label>
                   <input
-                    type="text"
-                    required
-                    placeholder="e.g. MEE 401"
-                    value={assCourseCode}
-                    onChange={(e) => setAssCourseCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-white uppercase"
+                    type="number"
+                    min="5"
+                    max="100"
+                    value={assPoints}
+                    onChange={(e) => setAssPoints(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                   />
-                )}
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Max Score (Points)</label>
-                <input
-                  type="number"
-                  min="5"
-                  max="100"
-                  value={assPoints}
-                  onChange={(e) => setAssPoints(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Assignment Title</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Steam Power Cycle Exergy Problem Set"
-                value={assTitle}
-                onChange={(e) => setAssTitle(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-semibold"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Deadline Date & Time</label>
-              <input
-                type="datetime-local"
-                required
-                value={assDeadline}
-                onChange={(e) => setAssDeadline(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2 text-xs text-white focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Instructions / Submission Mode</label>
-              <input
-                type="text"
-                placeholder="e.g. Submit physical handwritten solutions in LT-2 assignment box."
-                value={assInstructions}
-                onChange={(e) => setAssInstructions(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Task Problem Statement & Guidelines</label>
-              <textarea
-                rows={3}
-                required
-                placeholder="Detailed instructions for the assignment..."
-                value={assDescription}
-                onChange={(e) => setAssDescription(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Attached Problem Set Name (Optional)</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Assignment Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. MEE401_Problem_Set_1.pdf"
-                  value={assAttachment}
-                  onChange={(e) => setAssAttachment(e.target.value)}
+                  required
+                  placeholder="e.g. Steam Power Cycle Exergy Problem Set"
+                  value={assTitle}
+                  onChange={(e) => setAssTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Deadline Date & Time</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={assDeadline}
+                  onChange={(e) => setAssDeadline(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2 text-xs text-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Instructions / Submission Mode</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Submit physical handwritten solutions in LT-2 assignment box."
+                  value={assInstructions}
+                  onChange={(e) => setAssInstructions(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
-                <select
-                  value={assSemester}
-                  onChange={(e) => setAssSemester(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
-                >
-                  <option value="Harmattan Semester">🍂 Harmattan Semester</option>
-                  <option value="Rain Semester">🌧️ Rain Semester</option>
-                </select>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Task Problem Statement & Guidelines</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Detailed instructions for the assignment..."
+                  value={assDescription}
+                  onChange={(e) => setAssDescription(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Attached Problem Set Name (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. MEE401_Problem_Set_1.pdf"
+                    value={assAttachment}
+                    onChange={(e) => setAssAttachment(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Semester Specification</label>
+                  <select
+                    value={assSemester}
+                    onChange={(e) => setAssSemester(e.target.value as any)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-white focus:outline-none cursor-pointer"
+                  >
+                    <option value="Harmattan Semester">🍂 Harmattan Semester</option>
+                    <option value="Rain Semester">🌧️ Rain Semester</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold border border-blue-400 shadow cursor-pointer transition-colors"
+              >
+                {loading ? 'Posting...' : '📅 Publish Assignment'}
+              </button>
+            </form>
+          </div>
+
+          {/* Current Assignments List */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📅</span>
+                <h2 className="font-extrabold text-white text-base">Active Course Assignments</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-mono font-bold">
+                  {assignments.length} Tasks
+                </span>
+                {assignments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleClearSection('assignments')}
+                    className="px-2.5 py-1 bg-red-950 text-red-300 hover:bg-red-900 border border-red-800 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    🗑️ Clear All
+                  </button>
+                )}
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold border border-blue-400 shadow cursor-pointer transition-colors"
-            >
-              {loading ? 'Posting...' : '📅 Publish Assignment'}
-            </button>
-          </form>
+            {assignments.length === 0 ? (
+              <div className="bg-slate-950 p-8 rounded-2xl border border-slate-800 text-center text-slate-400">
+                <span className="text-3xl">📅</span>
+                <p className="font-bold text-sm text-slate-200 mt-2">No assignments active</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Use the form on the left to post real departmental assignments & deadlines.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                {assignments.map((a) => (
+                  <div
+                    key={a.id}
+                    className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-amber-400 font-mono">{a.courseCode}</span>
+                        <span className="text-[10px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-800">
+                          {a.points} pts
+                        </span>
+                        <span className="text-[10px] bg-red-950 text-red-300 px-1.5 py-0.5 rounded border border-red-800 font-medium">
+                          Due: {new Date(a.deadline).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white mt-1">{a.title}</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">{a.description}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAssignment(a.id, a.title)}
+                      className="p-1.5 bg-red-950 hover:bg-red-900 text-red-300 rounded-lg border border-red-800 text-xs cursor-pointer shrink-0"
+                      title="Delete Assignment"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1752,6 +2127,54 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
           </div>
         </div>
       )}
+
+      {/* Bottom Action Bar: Save All Changes */}
+      <div className="bg-slate-900 border-2 border-emerald-600/70 rounded-2xl p-5 sm:p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 mt-8">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="w-12 h-12 rounded-xl bg-emerald-950 border border-emerald-600 flex items-center justify-center text-2xl shadow shrink-0">
+            💾
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-white text-base">
+                Save All Changes
+              </h3>
+              <span className="text-[10px] uppercase tracking-wider font-mono bg-emerald-950 text-emerald-300 border border-emerald-700 px-2 py-0.5 rounded font-bold">
+                Permanent Database Sync
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Click this button whenever you add, edit, or delete courses, materials, assignments, or notes. Changes will be permanently locked into the database and synced across everybody's portal.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto justify-end">
+          {saveAllMessage && (
+            <span className="text-xs text-emerald-300 font-bold bg-emerald-950/90 px-3.5 py-2 rounded-xl border border-emerald-600 text-center animate-pulse">
+              {saveAllMessage}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleSaveAllChanges}
+            disabled={savingAll}
+            className="w-full sm:w-auto px-7 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 text-white rounded-xl text-xs font-black tracking-wider uppercase border-2 border-emerald-400 shadow-xl cursor-pointer transition-all flex items-center justify-center gap-2"
+          >
+            {savingAll ? (
+              <>
+                <span className="animate-spin">🔄</span>
+                <span>Saving to Database...</span>
+              </>
+            ) : (
+              <>
+                <span className="text-base">💾</span>
+                <span>Save All Changes</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

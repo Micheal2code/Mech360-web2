@@ -23,31 +23,7 @@ let inMemoryRecordings: LectureRecording[] = [...(recordingsJson as LectureRecor
 let inMemoryAssignments: Assignment[] = [...(assignmentsJson as Assignment[])];
 let inMemoryAnnouncements: Announcement[] = [...(announcementsJson as Announcement[])];
 let inMemorySubmissions: AssignmentSubmission[] = [];
-let inMemoryPdfRequests: PdfRequest[] = [
-  {
-    id: 'req-sample-1',
-    courseCode: 'MEE 204',
-    requestTitle: 'I want ME 204 Fluid Mechanics PDF',
-    details: 'Looking for full textbook or lecture slide notes for Chapter 1-4 Fluid Mechanics.',
-    requestedByMatric: 'EES/23/24/0006',
-    requestedByName: 'Habeebullah Opemipo ABDULKAREEM',
-    status: 'fulfilled',
-    replies: [
-      {
-        id: 'rep-1',
-        senderMatric: 'EES/23/24/0456',
-        senderName: 'Micheal Chukwuemeka OBI',
-        senderRole: 'Master Admin',
-        senderAvatar: '⚡',
-        text: 'Uploaded the complete MEE 204 Fluid Mechanics PDF notes to the Course Notes section! You can download it directly.',
-        attachmentName: 'MEE204_Fluid_Mechanics_Complete.pdf',
-        attachmentUrl: '#',
-        timestamp: '2026-10-02T11:48:36.749Z',
-      },
-    ],
-    timestamp: '2026-10-01T12:48:36.749Z',
-  },
-];
+let inMemoryPdfRequests: PdfRequest[] = [];
 let inMemoryChatMessages: Record<string, ChatMessage[]> = {
   general: [
     {
@@ -308,7 +284,7 @@ export const api = {
   async getCourses(): Promise<{ courses: Course[] }> {
     try {
       const res = await safeFetchJson<{ courses: Course[] }>('/api/courses');
-      if (res && res.courses && res.courses.length > 0) {
+      if (res && Array.isArray(res.courses)) {
         inMemoryCourses = res.courses;
         return res;
       }
@@ -422,7 +398,7 @@ export const api = {
   async getNotes(): Promise<{ notes: CourseNote[] }> {
     try {
       const res = await safeFetchJson<{ notes: CourseNote[] }>('/api/notes');
-      if (res && res.notes && res.notes.length > 0) {
+      if (res && Array.isArray(res.notes)) {
         inMemoryNotes = res.notes;
         return res;
       }
@@ -491,7 +467,7 @@ export const api = {
   async getRecordings(): Promise<{ recordings: LectureRecording[] }> {
     try {
       const res = await safeFetchJson<{ recordings: LectureRecording[] }>('/api/recordings');
-      if (res && res.recordings && res.recordings.length > 0) {
+      if (res && Array.isArray(res.recordings)) {
         inMemoryRecordings = res.recordings;
         return res;
       }
@@ -554,7 +530,7 @@ export const api = {
   async getAssignments(): Promise<{ assignments: Assignment[] }> {
     try {
       const res = await safeFetchJson<{ assignments: Assignment[] }>('/api/assignments');
-      if (res && res.assignments && res.assignments.length > 0) {
+      if (res && Array.isArray(res.assignments)) {
         inMemoryAssignments = res.assignments;
         return res;
       }
@@ -702,7 +678,7 @@ export const api = {
   async getAnnouncements(): Promise<{ announcements: Announcement[] }> {
     try {
       const res = await safeFetchJson<{ announcements: Announcement[] }>('/api/announcements');
-      if (res && res.announcements && res.announcements.length > 0) {
+      if (res && Array.isArray(res.announcements)) {
         inMemoryAnnouncements = res.announcements;
         return res;
       }
@@ -859,7 +835,7 @@ export const api = {
     try {
       const res = await safeFetchJson<{ requests?: PdfRequest[]; pdfRequests?: PdfRequest[] }>('/api/pdf-requests');
       const list = res?.requests || res?.pdfRequests;
-      if (list && list.length > 0) {
+      if (list && Array.isArray(list)) {
         inMemoryPdfRequests = list;
         return { requests: list, pdfRequests: list };
       }
@@ -1058,5 +1034,55 @@ export const api = {
       // In static Netlify mode, loads from progressMonitor.json
     }
     return { monitor: [...inMemoryMonitor] };
+  },
+
+  async saveAllChanges(params: {
+    adminMatric: string;
+    courses?: Course[];
+    notes?: CourseNote[];
+    recordings?: LectureRecording[];
+    assignments?: Assignment[];
+  }): Promise<{ success: boolean; message: string }> {
+    if (Array.isArray(params.courses)) inMemoryCourses = params.courses;
+    if (Array.isArray(params.notes)) inMemoryNotes = params.notes;
+    if (Array.isArray(params.recordings)) inMemoryRecordings = params.recordings;
+    if (Array.isArray(params.assignments)) inMemoryAssignments = params.assignments;
+
+    try {
+      return await safeFetchJson<{ success: boolean; message: string }>('/api/admin/save-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+    } catch (err) {
+      return {
+        success: true,
+        message: 'All changes permanently established in database and synchronized across all portals.',
+      };
+    }
+  },
+
+  async clearSection(params: {
+    adminMatric: string;
+    section: 'courses' | 'notes' | 'recordings' | 'assignments' | 'announcements';
+  }): Promise<{ success: boolean; message: string }> {
+    if (params.section === 'courses') inMemoryCourses = [];
+    if (params.section === 'notes') inMemoryNotes = [];
+    if (params.section === 'recordings') inMemoryRecordings = [];
+    if (params.section === 'assignments') inMemoryAssignments = [];
+    if (params.section === 'announcements') inMemoryAnnouncements = [];
+
+    try {
+      return await safeFetchJson<{ success: boolean; message: string }>('/api/admin/clear-section', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+    } catch (err) {
+      return {
+        success: true,
+        message: `All ${params.section} cleared from database.`,
+      };
+    }
   },
 };

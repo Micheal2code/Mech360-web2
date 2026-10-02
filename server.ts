@@ -23,6 +23,11 @@ const PORT = process.env.PORT || 3000;
 const DB_STORE_PATH = path.resolve(__dirname, 'db_store.json');
 const COURSES_JSON_PATH = path.resolve(__dirname, 'src/data/courses.json');
 const ROSTER_JSON_PATH = path.resolve(__dirname, 'src/data/roster.json');
+const NOTES_JSON_PATH = path.resolve(__dirname, 'src/data/notes.json');
+const RECORDINGS_JSON_PATH = path.resolve(__dirname, 'src/data/recordings.json');
+const ASSIGNMENTS_JSON_PATH = path.resolve(__dirname, 'src/data/assignments.json');
+const AUDIT_LOGS_JSON_PATH = path.resolve(__dirname, 'src/data/auditLogs.json');
+const ANNOUNCEMENTS_JSON_PATH = path.resolve(__dirname, 'src/data/announcements.json');
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
@@ -268,8 +273,13 @@ export function saveDB() {
       auditLogs,
     };
     fs.writeFileSync(DB_STORE_PATH, JSON.stringify(payload, null, 2), 'utf-8');
-    // Ensure src/data/courses.json stays updated
+    // Ensure all JSON files in src/data stay updated
     fs.writeFileSync(COURSES_JSON_PATH, JSON.stringify(coursesDB, null, 2), 'utf-8');
+    fs.writeFileSync(NOTES_JSON_PATH, JSON.stringify(courseNotes, null, 2), 'utf-8');
+    fs.writeFileSync(RECORDINGS_JSON_PATH, JSON.stringify(lectureRecordings, null, 2), 'utf-8');
+    fs.writeFileSync(ASSIGNMENTS_JSON_PATH, JSON.stringify(assignments, null, 2), 'utf-8');
+    fs.writeFileSync(AUDIT_LOGS_JSON_PATH, JSON.stringify(auditLogs, null, 2), 'utf-8');
+    fs.writeFileSync(ANNOUNCEMENTS_JSON_PATH, JSON.stringify(announcements, null, 2), 'utf-8');
   } catch (err) {
     console.error('Error writing to local JSON DB file store:', err);
   }
@@ -282,18 +292,18 @@ export function loadDB() {
       if (content && content.trim()) {
         const payload = JSON.parse(content);
         if (payload.studentsDB) studentsDB = payload.studentsDB;
-        if (payload.coursesDB && payload.coursesDB.length > 0) {
+        if (Array.isArray(payload.coursesDB)) {
           coursesDB = payload.coursesDB;
         } else if (fs.existsSync(COURSES_JSON_PATH)) {
           coursesDB = JSON.parse(fs.readFileSync(COURSES_JSON_PATH, 'utf-8'));
         }
-        if (payload.courseNotes) courseNotes = payload.courseNotes;
-        if (payload.lectureRecordings) lectureRecordings = payload.lectureRecordings;
-        if (payload.assignments) assignments = payload.assignments;
-        if (payload.assignmentSubmissions) assignmentSubmissions = payload.assignmentSubmissions;
-        if (payload.announcements) announcements = payload.announcements;
-        if (payload.chatMessages) chatMessages = payload.chatMessages;
-        if (payload.pdfRequests) pdfRequests = payload.pdfRequests;
+        if (Array.isArray(payload.courseNotes)) courseNotes = payload.courseNotes;
+        if (Array.isArray(payload.lectureRecordings)) lectureRecordings = payload.lectureRecordings;
+        if (Array.isArray(payload.assignments)) assignments = payload.assignments;
+        if (Array.isArray(payload.assignmentSubmissions)) assignmentSubmissions = payload.assignmentSubmissions;
+        if (Array.isArray(payload.announcements)) announcements = payload.announcements;
+        if (Array.isArray(payload.chatMessages)) chatMessages = payload.chatMessages;
+        if (Array.isArray(payload.pdfRequests)) pdfRequests = payload.pdfRequests;
         if (payload.auditLogs) {
           auditLogs.length = 0;
           auditLogs.push(...payload.auditLogs);
@@ -839,6 +849,84 @@ app.get('/api/admin/audit-logs', (req, res) => {
   }
 
   return res.json({ logs: auditLogs });
+});
+
+// Admin Portal: Save All Changes permanently across DB and JSON files
+app.post('/api/admin/save-all', (req, res) => {
+  const { adminMatric, courses, notes, recordings, assignments: newAss } = req.body;
+  const admin = studentsDB.find((s) => s.matricNo === adminMatric?.trim().toUpperCase());
+
+  if (!admin || (!admin.isAdmin && !admin.isPartialAdmin)) {
+    return res.status(403).json({ error: 'Unauthorized: Admin permissions required to save changes.' });
+  }
+
+  if (Array.isArray(courses)) coursesDB = courses;
+  if (Array.isArray(notes)) courseNotes = notes;
+  if (Array.isArray(recordings)) lectureRecordings = recordings;
+  if (Array.isArray(newAss)) assignments = newAss;
+
+  saveDB();
+
+  exec('git add src/data/*.json db_store.json && git commit -m "Admin: Save All Changes" && git push', (gitErr, stdout) => {
+    if (gitErr) {
+      console.log('[Git Push Notice]:', gitErr.message);
+    } else {
+      console.log('[Git Push Success]:', stdout?.trim() || 'Pushed to remote.');
+    }
+  });
+
+  auditLogs.unshift({
+    id: `log-${Date.now()}`,
+    type: 'ROLE_CHANGE',
+    timestamp: new Date().toISOString(),
+    matricNo: admin.matricNo,
+    description: `Admin "${admin.fullName}" clicked "Save All Changes": All current courses (${coursesDB.length}), notes (${courseNotes.length}), recordings (${lectureRecordings.length}), and assignments (${assignments.length}) permanently saved to database.`,
+  });
+
+  return res.json({
+    success: true,
+    message: 'All changes permanently saved in database and synchronized across all portals.',
+  });
+});
+
+// Admin Portal: Clear Section items permanently
+app.post('/api/admin/clear-section', (req, res) => {
+  const { adminMatric, section } = req.body;
+  const admin = studentsDB.find((s) => s.matricNo === adminMatric?.trim().toUpperCase());
+
+  if (!admin || (!admin.isAdmin && !admin.isPartialAdmin)) {
+    return res.status(403).json({ error: 'Unauthorized: Admin permissions required.' });
+  }
+
+  if (section === 'courses' && admin.isAdmin) {
+    coursesDB = [];
+  } else if (section === 'notes') {
+    courseNotes = [];
+  } else if (section === 'recordings') {
+    lectureRecordings = [];
+  } else if (section === 'assignments') {
+    assignments = [];
+    assignmentSubmissions = [];
+  } else if (section === 'announcements') {
+    announcements = [];
+  } else {
+    return res.status(400).json({ error: 'Invalid section' });
+  }
+
+  saveDB();
+
+  auditLogs.unshift({
+    id: `log-${Date.now()}`,
+    type: 'ROLE_CHANGE',
+    timestamp: new Date().toISOString(),
+    matricNo: admin.matricNo,
+    description: `Admin "${admin.fullName}" cleared all items in section "${section}". Saved to database.`,
+  });
+
+  return res.json({
+    success: true,
+    message: `All items in ${section} cleared and saved to database.`,
+  });
 });
 
 // ---------------- COURSE NOTES ----------------

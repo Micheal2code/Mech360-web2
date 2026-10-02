@@ -215,6 +215,8 @@ const AppContent: React.FC = () => {
             {activeTab === 'admin' && (
               <AdminPortalView
                 courses={courses}
+                notes={notes}
+                recordings={recordings}
                 assignments={assignments}
                 pdfRequests={pdfRequests}
                 onRefreshAll={loadAllData}

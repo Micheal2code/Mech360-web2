@@ -913,88 +913,7 @@
       "avatarEmoji": "🛠️"
     }
   ],
-  "coursesDB": [
-    {
-      "code": "MEE 401",
-      "title": "Heat and Mass Transfer",
-      "units": 3,
-      "lecturer": "Prof. Babalola",
-      "description": "Conduction, convection, radiation heat transfer, boiling, condensation, and heat exchangers design.",
-      "iconEmoji": "🔥",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 403",
-      "title": "Machine Design II",
-      "units": 3,
-      "lecturer": "Dr. Adeleke",
-      "description": "Design of mechanical components: clutches, brakes, gears, bearings, springs, and pressure vessels.",
-      "iconEmoji": "⚙️",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 405",
-      "title": "Fluid Power & Hydraulic Machinery",
-      "units": 3,
-      "lecturer": "Engr. Dr. Okonkwo",
-      "description": "Fluid power systems, pumps, turbines, hydraulic circuits, valves, actuators, and pneumatic systems.",
-      "iconEmoji": "💧",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 407",
-      "title": "Mechanics of Deformable Bodies",
-      "units": 3,
-      "lecturer": "Prof. Sanni",
-      "description": "3D stress and strain analysis, yield criteria, unsymmetrical bending, torsion of non-circular sections, and plates.",
-      "iconEmoji": "📐",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 409",
-      "title": "Theory of Machines & Vibrations",
-      "units": 3,
-      "lecturer": "Dr. Alabi",
-      "description": "Kinematics, dynamics of machinery, balancing of rotating and reciprocating masses, single and multi-degree vibrations.",
-      "iconEmoji": "⚡",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 411",
-      "title": "Applied Thermodynamics",
-      "units": 3,
-      "lecturer": "Dr. Olayiwola",
-      "description": "Power cycles, refrigeration and air conditioning systems, combustion stoichiometry, and gas turbines.",
-      "iconEmoji": "🌡️",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 413",
-      "title": "Engineering Metallurgy & Materials Selection",
-      "units": 2,
-      "lecturer": "Dr. Mrs. Ogundimu",
-      "description": "Phase equilibria, heat treatment of steels, alloy design, corrosion mechanisms, and material selection charts.",
-      "iconEmoji": "🔬",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    },
-    {
-      "code": "MEE 415",
-      "title": "CAD/CAM & Finite Element Analysis",
-      "units": 2,
-      "lecturer": "Engr. Adeyemi",
-      "description": "SolidWorks 3D modeling, FEA meshing, boundary conditions, CNC G-code generation, and computer-integrated manufacturing.",
-      "iconEmoji": "💻",
-      "colorBg": "bg-slate-900",
-      "colorBorder": "border-slate-800"
-    }
-  ],
+  "coursesDB": [],
   "courseNotes": [],
   "lectureRecordings": [],
   "assignments": [],
@@ -1017,32 +936,29 @@
       }
     }
   ],
-  "pdfRequests": [
-    {
-      "id": "req-sample-1",
-      "courseCode": "MEE 204",
-      "requestTitle": "I want ME 204 Fluid Mechanics PDF",
-      "details": "Looking for full textbook or lecture slide notes for Chapter 1-4 Fluid Mechanics.",
-      "requestedByMatric": "EES/23/24/0006",
-      "requestedByName": "Habeebullah Opemipo ABDULKAREEM",
-      "status": "fulfilled",
-      "replies": [
-        {
-          "id": "rep-1",
-          "senderMatric": "EES/23/24/0456",
-          "senderName": "Micheal Chukwuemeka OBI",
-          "senderRole": "Master Admin",
-          "senderAvatar": "⚡",
-          "text": "Uploaded the complete MEE 204 Fluid Mechanics PDF notes to the Course Notes section! You can download it directly.",
-          "attachmentName": "MEE204_Fluid_Mechanics_Complete.pdf",
-          "attachmentUrl": "#",
-          "timestamp": "2026-10-02T11:48:36.749Z"
-        }
-      ],
-      "timestamp": "2026-10-01T12:48:36.749Z"
-    }
-  ],
+  "pdfRequests": [],
   "auditLogs": [
+    {
+      "id": "log-1790947188350",
+      "type": "ROLE_CHANGE",
+      "timestamp": "2026-10-02T13:19:48.350Z",
+      "matricNo": "EES/23/24/0456",
+      "description": "Admin \"Micheal O.\" cleared all items in section \"courses\". Saved to database."
+    },
+    {
+      "id": "log-1790947172491",
+      "type": "COURSE_ADD",
+      "timestamp": "2026-10-02T13:19:32.491Z",
+      "matricNo": "EES/23/24/0456",
+      "description": "Added departmental course: MEE 401 - Applied Thermodynamics."
+    },
+    {
+      "id": "log-1790946500148",
+      "type": "ROLE_CHANGE",
+      "timestamp": "2026-10-02T13:08:20.148Z",
+      "matricNo": "EES/23/24/0456",
+      "description": "Admin \"Micheal O.\" clicked \"Save All Changes\": All current courses (0), notes (0), recordings (0), and assignments (0) permanently saved to database."
+    },
     {
       "id": "log-init",
       "type": "LOGIN_SUCCESS",
