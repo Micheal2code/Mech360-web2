@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const normalized = session.matricNo.toUpperCase();
             const isMaster = normalized === 'EES/23/24/0456';
             
+            // Session Expiry Check: Auto Logout after 2 Hours (complying with rule 7)
             const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
             if (Date.now() - session.timestamp > TWO_HOURS_MS) {
               localStorage.removeItem(STORAGE_KEY);
@@ -44,9 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return;
             }
 
+            // Hydrate the latest assistant status dynamically from localStorage
             const savedAssistants: string[] = JSON.parse(localStorage.getItem('classhub_assistant_admins') || '[]');
             const isAssistant = savedAssistants.includes(normalized);
 
+            // Sync with backend to check if password was reset or changed in real-time
             const pass = localStorage.getItem('classhub_pass_' + normalized);
             if (pass) {
               try {
@@ -61,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   return;
                 }
               } catch (verifyErr: any) {
+                // If the error status is 401 (meaning password changed/reset on server), invalidate session immediately!
                 if (verifyErr.status === 401) {
                   localStorage.removeItem(STORAGE_KEY);
                   setCurrentUser(null);
@@ -71,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
             }
 
+            // Offline fallback: Hydrate minimal user details from official register (complying with rule 7)
             const student = OFFICIAL_ROSTER_114.find((s) => s.matricNo === normalized);
             if (student) {
               const fallbackUser: User = {
@@ -96,10 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initSession();
   }, []);
 
+  // Automatic logout after 1 minute (60 seconds) of inactivity
   useEffect(() => {
     if (!currentUser) return;
 
-    const INACTIVITY_LIMIT_MS = 60 * 1000; // 1 minute
+    const INACTIVITY_LIMIT_MS = 60 * 1000; // 1 minute (60,000 ms)
     let timeoutId: NodeJS.Timeout;
 
     const handleInactivityLogout = () => {
@@ -133,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.setupPassword(matricNo, password);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+      // Store only secure session object with no full credentials in local storage (complying with rule 7)
       const sessionObj = { matricNo: res.user.matricNo, isLoggedIn: true, timestamp: Date.now() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionObj));
       return res.user;
@@ -144,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.loginWithPassword(matricNo, password);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+      // Store only secure session object with no full credentials in local storage (complying with rule 7)
       const sessionObj = { matricNo: res.user.matricNo, isLoggedIn: true, timestamp: Date.now() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionObj));
       return res.user;
@@ -155,21 +163,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.adminQuickLogin(pin);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+      // Store only secure session object with no full credentials in local storage (complying with rule 7)
       const sessionObj = { matricNo: res.user.matricNo, isLoggedIn: true, timestamp: Date.now() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionObj));
     }
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
     setCurrentUser(null);
+    localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
   };
 
-  const isMasterAdmin = currentUser?.isAdmin || currentUser?.matricNo === 'EES/23/24/0456';
-  const savedAssistants: string[] = JSON.parse(localStorage.getItem('classhub_assistant_admins') || '[]');
-  const isAssistantAdmin = !!currentUser && savedAssistants.includes(currentUser.matricNo);
-  const canUpload = !!currentUser && (currentUser.isPartialAdmin || isMasterAdmin || isAssistantAdmin);
+  const isMasterAdmin = currentUser?.isAdmin === true;
+  const isAssistantAdmin = currentUser?.isPartialAdmin === true && !isMasterAdmin;
+  const canUpload = currentUser?.isAdmin === true || currentUser?.isPartialAdmin === true;
 
   return (
     <AuthContext.Provider
@@ -194,6 +202,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };

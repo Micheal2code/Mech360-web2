@@ -229,6 +229,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminMatric, targetMatric, newPassword }),
       });
+      // Also update locally to sync immediately
       localStorage.setItem('classhub_pass_' + targetMatric.trim().toUpperCase(), newPassword.trim());
       return res;
     } catch (err: any) {
@@ -241,7 +242,7 @@ export const api = {
     }
   },
 
-  // Courses
+  // Courses (Dynamic & Admin Managed)
   async getCourses(): Promise<{ courses: Course[] }> {
     try {
       return await safeFetchJson<{ courses: Course[] }>('/api/courses');

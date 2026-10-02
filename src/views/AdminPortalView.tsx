@@ -1402,9 +1402,9 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
           </div>
 
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 font-mono text-xs">
-            {auditLogs.map((log, index) => (
+            {auditLogs.map((log) => (
               <div
-                key={`${log.id}-${index}`}
+                key={log.id}
                 className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1"
               >
                 <div className="flex justify-between text-[10px] text-slate-400">
@@ -1566,9 +1566,9 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
                             </div>
                           ) : (
                             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 text-xs">
-                              {assistantLogs.map((log, index) => (
+                              {assistantLogs.map((log) => (
                                 <div
-                                  key={`${log.id}-${index}`}
+                                  key={log.id}
                                   className="bg-slate-950 border border-slate-850 p-2.5 rounded-lg space-y-1 font-mono"
                                 >
                                   <div className="flex items-center justify-between text-[10px] text-slate-400">
