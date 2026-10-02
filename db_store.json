@@ -1,0 +1,1054 @@
+{
+  "studentsDB": [
+    {
+      "matricNo": "EES/22/23/0034",
+      "fullName": "Solomon A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/22/23/0111",
+      "fullName": "Yusuf A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔧"
+    },
+    {
+      "matricNo": "EES/22/23/0621",
+      "fullName": "Moses R.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📐"
+    },
+    {
+      "matricNo": "EES/23/24/0006",
+      "fullName": "Habeebullah A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0008",
+      "fullName": "Jemila A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0028",
+      "fullName": "Martins A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🏎️"
+    },
+    {
+      "matricNo": "EES/23/24/0040",
+      "fullName": "Oluwabukunmi A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0047",
+      "fullName": "Kehinde A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🤖"
+    },
+    {
+      "matricNo": "EES/23/24/0069",
+      "fullName": "Adesegun A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💻"
+    },
+    {
+      "matricNo": "EES/23/24/0080",
+      "fullName": "Oyindamola A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0082",
+      "fullName": "Samuel A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📊"
+    },
+    {
+      "matricNo": "EES/23/24/0092",
+      "fullName": "Ayobami A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🛠️"
+    },
+    {
+      "matricNo": "EES/23/24/0096",
+      "fullName": "Gbolahan A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0103",
+      "fullName": "Taiwo A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔋"
+    },
+    {
+      "matricNo": "EES/23/24/0105",
+      "fullName": "Emmanuel A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🎓"
+    },
+    {
+      "matricNo": "EES/23/24/0112",
+      "fullName": "Micheal A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0120",
+      "fullName": "Abdullahi A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0121",
+      "fullName": "Abubakre A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/23/24/0125",
+      "fullName": "Adeyinka A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0127",
+      "fullName": "Emmanuel A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0135",
+      "fullName": "Elijah A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0139",
+      "fullName": "Vivian A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "✨"
+    },
+    {
+      "matricNo": "EES/23/24/0152",
+      "fullName": "Olawale A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0155",
+      "fullName": "Shallom A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🌟"
+    },
+    {
+      "matricNo": "EES/23/24/0156",
+      "fullName": "Precious A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🏎️"
+    },
+    {
+      "matricNo": "EES/23/24/0160",
+      "fullName": "David A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔧"
+    },
+    {
+      "matricNo": "EES/23/24/0161",
+      "fullName": "Inioluwa A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📐"
+    },
+    {
+      "matricNo": "EES/23/24/0174",
+      "fullName": "James A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0183",
+      "fullName": "Oluwajoba A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0188",
+      "fullName": "James A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0189",
+      "fullName": "Akorede A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/23/24/0191",
+      "fullName": "Dominion A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0193",
+      "fullName": "Matthew A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0203",
+      "fullName": "Emmanuel A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0209",
+      "fullName": "Abdulrahman A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🤖"
+    },
+    {
+      "matricNo": "EES/23/24/0216",
+      "fullName": "Ayomide A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💻"
+    },
+    {
+      "matricNo": "EES/23/24/0218",
+      "fullName": "Abdul-azeem A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🎓"
+    },
+    {
+      "matricNo": "EES/23/24/0231",
+      "fullName": "Dominion A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔋"
+    },
+    {
+      "matricNo": "EES/23/24/0232",
+      "fullName": "Boluwatife A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "✨"
+    },
+    {
+      "matricNo": "EES/23/24/0239",
+      "fullName": "Adedeji A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🛠️"
+    },
+    {
+      "matricNo": "EES/23/24/0251",
+      "fullName": "Abdulazeez B.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0270",
+      "fullName": "Victor B.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0272",
+      "fullName": "Opeoluwa B.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0282",
+      "fullName": "Oluwadamilola B.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0309",
+      "fullName": "Samuel E.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/23/24/0312",
+      "fullName": "Dara-abasi E.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0313",
+      "fullName": "Boluwatife E.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🏎️"
+    },
+    {
+      "matricNo": "EES/23/24/0342",
+      "fullName": "Emmanuel G.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔧"
+    },
+    {
+      "matricNo": "EES/23/24/0343",
+      "fullName": "Oluwatobiloba G.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📐"
+    },
+    {
+      "matricNo": "EES/23/24/0362",
+      "fullName": "Olayinka I.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0364",
+      "fullName": "Taofeek I.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🤖"
+    },
+    {
+      "matricNo": "EES/23/24/0365",
+      "fullName": "Olasanmi I.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "✨"
+    },
+    {
+      "matricNo": "EES/23/24/0373",
+      "fullName": "David I.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💻"
+    },
+    {
+      "matricNo": "EES/23/24/0379",
+      "fullName": "Hammed I.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0384",
+      "fullName": "Nasrullah J.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🎓"
+    },
+    {
+      "matricNo": "EES/23/24/0390",
+      "fullName": "Kassim J.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔋"
+    },
+    {
+      "matricNo": "EES/23/24/0391",
+      "fullName": "Praise J.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🛠️"
+    },
+    {
+      "matricNo": "EES/23/24/0395",
+      "fullName": "Precious J.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🌟"
+    },
+    {
+      "matricNo": "EES/23/24/0403",
+      "fullName": "Ifeoluwa K.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0404",
+      "fullName": "Abdul-lateef K.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/23/24/0413",
+      "fullName": "Omofolarin K.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0414",
+      "fullName": "Toluwani K.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0433",
+      "fullName": "Oreoluwa M.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0434",
+      "fullName": "Abdullahi M.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0444",
+      "fullName": "Ibrahim M.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0449",
+      "fullName": "Praise N.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🏎️"
+    },
+    {
+      "matricNo": "EES/23/24/0456",
+      "fullName": "Micheal O.",
+      "level": "400 Level",
+      "isAdmin": true,
+      "isPartialAdmin": true,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0461",
+      "fullName": "Victor O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔧"
+    },
+    {
+      "matricNo": "EES/23/24/0466",
+      "fullName": "Lukman O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📐"
+    },
+    {
+      "matricNo": "EES/23/24/0482",
+      "fullName": "Ibukunmi O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🤖"
+    },
+    {
+      "matricNo": "EES/23/24/0496",
+      "fullName": "Al-amin O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💻"
+    },
+    {
+      "matricNo": "EES/23/24/0507",
+      "fullName": "Oluwatejuola O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔋"
+    },
+    {
+      "matricNo": "EES/23/24/0513",
+      "fullName": "Babajide O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0544",
+      "fullName": "Adedeji O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🛠️"
+    },
+    {
+      "matricNo": "EES/23/24/0561",
+      "fullName": "Deborah O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "✨"
+    },
+    {
+      "matricNo": "EES/23/24/0565",
+      "fullName": "Enoch O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/23/24/0566",
+      "fullName": "Fiyinfoluwa O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0573",
+      "fullName": "Livingword O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🌟"
+    },
+    {
+      "matricNo": "EES/23/24/0579",
+      "fullName": "Mubarak O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0581",
+      "fullName": "Oluwatobi O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0582",
+      "fullName": "Daniel O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0592",
+      "fullName": "Oluwadamilare O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0601",
+      "fullName": "Oluwatobiloba O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🏎️"
+    },
+    {
+      "matricNo": "EES/23/24/0603",
+      "fullName": "Oluwasegun O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔧"
+    },
+    {
+      "matricNo": "EES/23/24/0617",
+      "fullName": "Emmanuel O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📐"
+    },
+    {
+      "matricNo": "EES/23/24/0619",
+      "fullName": "Feyisayo O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0626",
+      "fullName": "Oluwanimilo O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🤖"
+    },
+    {
+      "matricNo": "EES/23/24/0663",
+      "fullName": "Osibolanle O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💻"
+    },
+    {
+      "matricNo": "EES/23/24/0678",
+      "fullName": "Olumide O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🎓"
+    },
+    {
+      "matricNo": "EES/23/24/0679",
+      "fullName": "Godwin O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔋"
+    },
+    {
+      "matricNo": "EES/23/24/0692",
+      "fullName": "Ridwan R.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0693",
+      "fullName": "Toheeb R.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🛠️"
+    },
+    {
+      "matricNo": "EES/23/24/0698",
+      "fullName": "Abiodun S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/23/24/0701",
+      "fullName": "Maliq S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/23/24/0703",
+      "fullName": "Pelumi S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/23/24/0710",
+      "fullName": "Amod S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/23/24/0712",
+      "fullName": "Oluwagbotemi S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/23/24/0713",
+      "fullName": "Olubusola S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "✨"
+    },
+    {
+      "matricNo": "EES/23/24/0717",
+      "fullName": "Idris S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/23/24/0720",
+      "fullName": "Oluwajoba S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/23/24/0726",
+      "fullName": "David S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔧"
+    },
+    {
+      "matricNo": "EES/23/24/0728",
+      "fullName": "Olasubomi S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "📐"
+    },
+    {
+      "matricNo": "EES/23/24/0744",
+      "fullName": "Michael S.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🏎️"
+    },
+    {
+      "matricNo": "EES/23/24/0747",
+      "fullName": "Samuel T.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🤖"
+    },
+    {
+      "matricNo": "EES/23/24/0749",
+      "fullName": "Ayomide T.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💻"
+    },
+    {
+      "matricNo": "EES/23/24/0763",
+      "fullName": "David W.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔋"
+    },
+    {
+      "matricNo": "EES/24/25/0012",
+      "fullName": "Abdul-waris A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚙️"
+    },
+    {
+      "matricNo": "EES/24/25/0220",
+      "fullName": "Toheeb A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🚀"
+    },
+    {
+      "matricNo": "EES/24/25/0255",
+      "fullName": "Oluwamayowa A.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🧠"
+    },
+    {
+      "matricNo": "EES/24/25/0304",
+      "fullName": "Hassan B.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "⚡"
+    },
+    {
+      "matricNo": "EES/24/25/0350",
+      "fullName": "Samson E.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔥"
+    },
+    {
+      "matricNo": "EES/24/25/0609",
+      "fullName": "Samuel O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🔬"
+    },
+    {
+      "matricNo": "EES/24/25/0753",
+      "fullName": "Farhan O.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "💡"
+    },
+    {
+      "matricNo": "EES/24/25/0778",
+      "fullName": "Fawas R.",
+      "level": "400 Level",
+      "isAdmin": false,
+      "isPartialAdmin": false,
+      "avatarEmoji": "🛠️"
+    }
+  ],
+  "coursesDB": [
+    {
+      "code": "MEE 401",
+      "title": "Heat and Mass Transfer",
+      "units": 3,
+      "lecturer": "Prof. Babalola",
+      "description": "Conduction, convection, radiation heat transfer, boiling, condensation, and heat exchangers design.",
+      "iconEmoji": "🔥",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 403",
+      "title": "Machine Design II",
+      "units": 3,
+      "lecturer": "Dr. Adeleke",
+      "description": "Design of mechanical components: clutches, brakes, gears, bearings, springs, and pressure vessels.",
+      "iconEmoji": "⚙️",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 405",
+      "title": "Fluid Power & Hydraulic Machinery",
+      "units": 3,
+      "lecturer": "Engr. Dr. Okonkwo",
+      "description": "Fluid power systems, pumps, turbines, hydraulic circuits, valves, actuators, and pneumatic systems.",
+      "iconEmoji": "💧",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 407",
+      "title": "Mechanics of Deformable Bodies",
+      "units": 3,
+      "lecturer": "Prof. Sanni",
+      "description": "3D stress and strain analysis, yield criteria, unsymmetrical bending, torsion of non-circular sections, and plates.",
+      "iconEmoji": "📐",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 409",
+      "title": "Theory of Machines & Vibrations",
+      "units": 3,
+      "lecturer": "Dr. Alabi",
+      "description": "Kinematics, dynamics of machinery, balancing of rotating and reciprocating masses, single and multi-degree vibrations.",
+      "iconEmoji": "⚡",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 411",
+      "title": "Applied Thermodynamics",
+      "units": 3,
+      "lecturer": "Dr. Olayiwola",
+      "description": "Power cycles, refrigeration and air conditioning systems, combustion stoichiometry, and gas turbines.",
+      "iconEmoji": "🌡️",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 413",
+      "title": "Engineering Metallurgy & Materials Selection",
+      "units": 2,
+      "lecturer": "Dr. Mrs. Ogundimu",
+      "description": "Phase equilibria, heat treatment of steels, alloy design, corrosion mechanisms, and material selection charts.",
+      "iconEmoji": "🔬",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    },
+    {
+      "code": "MEE 415",
+      "title": "CAD/CAM & Finite Element Analysis",
+      "units": 2,
+      "lecturer": "Engr. Adeyemi",
+      "description": "SolidWorks 3D modeling, FEA meshing, boundary conditions, CNC G-code generation, and computer-integrated manufacturing.",
+      "iconEmoji": "💻",
+      "colorBg": "bg-slate-900",
+      "colorBorder": "border-slate-800"
+    }
+  ],
+  "courseNotes": [],
+  "lectureRecordings": [],
+  "assignments": [],
+  "assignmentSubmissions": [],
+  "announcements": [],
+  "chatMessages": [
+    {
+      "id": "msg-welcome",
+      "channelId": "general",
+      "senderMatric": "EES/23/24/0456",
+      "senderName": "Micheal Chukwuemeka OBI",
+      "senderRole": "Master Admin",
+      "senderAvatar": "⚡",
+      "text": "Welcome to the official 400L Mechanical Engineering ClassHub Commons! All official course notes, recordings, and assignments will be uploaded here.",
+      "timestamp": "2026-10-02T12:48:36.749Z",
+      "reactions": {
+        "👍": [
+          "Micheal Chukwuemeka OBI"
+        ]
+      }
+    }
+  ],
+  "pdfRequests": [
+    {
+      "id": "req-sample-1",
+      "courseCode": "MEE 204",
+      "requestTitle": "I want ME 204 Fluid Mechanics PDF",
+      "details": "Looking for full textbook or lecture slide notes for Chapter 1-4 Fluid Mechanics.",
+      "requestedByMatric": "EES/23/24/0006",
+      "requestedByName": "Habeebullah Opemipo ABDULKAREEM",
+      "status": "fulfilled",
+      "replies": [
+        {
+          "id": "rep-1",
+          "senderMatric": "EES/23/24/0456",
+          "senderName": "Micheal Chukwuemeka OBI",
+          "senderRole": "Master Admin",
+          "senderAvatar": "⚡",
+          "text": "Uploaded the complete MEE 204 Fluid Mechanics PDF notes to the Course Notes section! You can download it directly.",
+          "attachmentName": "MEE204_Fluid_Mechanics_Complete.pdf",
+          "attachmentUrl": "#",
+          "timestamp": "2026-10-02T11:48:36.749Z"
+        }
+      ],
+      "timestamp": "2026-10-01T12:48:36.749Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "log-init",
+      "type": "LOGIN_SUCCESS",
+      "timestamp": "2026-10-02T12:48:36.749Z",
+      "matricNo": "EES/23/24/0456",
+      "description": "System ready. Master Admin Micheal Chukwuemeka OBI initialized with full upload authority."
+    }
+  ]
+}

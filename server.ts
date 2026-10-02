@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { exec } from 'child_process';
 import { OFFICIAL_ROSTER_114, StudentRecord as BaseStudentRecord } from './src/data/rosterData.ts';
 
 export interface StudentRecord extends BaseStudentRecord {
@@ -18,8 +19,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Local JSON File Database store path
+// Local JSON File Database store paths
 const DB_STORE_PATH = path.resolve(__dirname, 'db_store.json');
+const COURSES_JSON_PATH = path.resolve(__dirname, 'src/data/courses.json');
+const ROSTER_JSON_PATH = path.resolve(__dirname, 'src/data/roster.json');
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
@@ -166,8 +169,17 @@ interface Announcement {
   timestamp: string;
 }
 
-// Clean Initial States: All sample/placeholder courses and materials removed as requested
+// Initialize Courses from src/data/courses.json
 let coursesDB: CourseItem[] = [];
+try {
+  if (fs.existsSync(COURSES_JSON_PATH)) {
+    const rawCourses = fs.readFileSync(COURSES_JSON_PATH, 'utf-8');
+    coursesDB = JSON.parse(rawCourses);
+  }
+} catch (e) {
+  console.error('Failed to load courses from courses.json:', e);
+}
+
 let courseNotes: CourseNote[] = [];
 let lectureRecordings: LectureRecording[] = [];
 let assignments: AssignmentItem[] = [];
@@ -224,6 +236,22 @@ let pdfRequests: any[] = [
   },
 ];
 
+// Sync courses.json file and attempt auto-push to GitHub
+export function syncCoursesJsonAndPush(reason: string) {
+  try {
+    fs.writeFileSync(COURSES_JSON_PATH, JSON.stringify(coursesDB, null, 2), 'utf-8');
+    exec('git add src/data/courses.json && git commit -m "Auto-sync courses.json: ' + reason + '" && git push', (err, stdout) => {
+      if (err) {
+        console.log('[Git Push Notice]:', err.message);
+      } else {
+        console.log('[Git Push Success]:', stdout ? stdout.trim() : 'Pushed to remote.');
+      }
+    });
+  } catch (err) {
+    console.error('Error writing to src/data/courses.json:', err);
+  }
+}
+
 // Helper functions to persist / restore database to/from local storage file (to survive compiles/reboots)
 export function saveDB() {
   try {
@@ -240,6 +268,8 @@ export function saveDB() {
       auditLogs,
     };
     fs.writeFileSync(DB_STORE_PATH, JSON.stringify(payload, null, 2), 'utf-8');
+    // Ensure src/data/courses.json stays updated
+    fs.writeFileSync(COURSES_JSON_PATH, JSON.stringify(coursesDB, null, 2), 'utf-8');
   } catch (err) {
     console.error('Error writing to local JSON DB file store:', err);
   }
@@ -252,7 +282,11 @@ export function loadDB() {
       if (content && content.trim()) {
         const payload = JSON.parse(content);
         if (payload.studentsDB) studentsDB = payload.studentsDB;
-        if (payload.coursesDB) coursesDB = payload.coursesDB;
+        if (payload.coursesDB && payload.coursesDB.length > 0) {
+          coursesDB = payload.coursesDB;
+        } else if (fs.existsSync(COURSES_JSON_PATH)) {
+          coursesDB = JSON.parse(fs.readFileSync(COURSES_JSON_PATH, 'utf-8'));
+        }
         if (payload.courseNotes) courseNotes = payload.courseNotes;
         if (payload.lectureRecordings) lectureRecordings = payload.lectureRecordings;
         if (payload.assignments) assignments = payload.assignments;
@@ -501,7 +535,7 @@ app.get('/api/admin/passwords', (req, res) => {
     department: 'Mechanical Engineering',
     level: s.level,
     hasPassword: !!s.password,
-    password: s.password || 'Not Set Yet',
+    password: s.password ? '******' : '',
     role: s.isAdmin ? 'Master Admin' : s.isPartialAdmin ? 'Assistant Admin' : 'Student',
   }));
 
@@ -713,6 +747,7 @@ app.post('/api/courses', (req, res) => {
   };
 
   coursesDB.push(newCourse);
+  syncCoursesJsonAndPush(`Added course ${newCourse.code}`);
 
   auditLogs.unshift({
     id: `log-${Date.now()}`,
@@ -738,6 +773,7 @@ app.delete('/api/courses/:code', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Course not found.' });
 
   const deleted = coursesDB.splice(idx, 1)[0];
+  syncCoursesJsonAndPush(`Deleted course ${deleted.code}`);
 
   auditLogs.unshift({
     id: `log-${Date.now()}`,

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "ass-mee401-1",
+    "courseCode": "MEE 401",
+    "title": "Problem Set 1: Multi-layer Cylindrical Steam Pipe Insulation Optimization",
+    "description": "Determine the optimal insulation thickness for high-pressure steam pipes in an energy plant, minimizing thermal loss and surface condensation risk. Calculate heat flux and annual fuel cost savings.",
+    "deadline": "2026-10-18T23:59:00.000Z",
+    "points": 20,
+    "instructions": "Submit physical neatly handwritten solution paper in LT-2 Department Assignment Box, or submit your group summary writeup here.",
+    "attachmentName": "MEE401_ProblemSet1_Brief.pdf",
+    "uploadedBy": "EES/23/24/0456",
+    "uploadedByName": "Micheal Chukwuemeka OBI",
+    "timestamp": "2026-10-01"
+  },
+  {
+    "id": "ass-mee403-1",
+    "courseCode": "MEE 403",
+    "title": "Design Task 1: Single Reduction Spur Gearbox Assembly & Stress Analysis",
+    "description": "Design an enclosed single-reduction spur gearbox transmitting 15 kW at 1440 rpm input speed. Select 20-degree full-depth teeth, determine face width, and verify contact endurance life.",
+    "deadline": "2026-10-25T23:59:00.000Z",
+    "points": 25,
+    "instructions": "Prepare complete calculation sheets with isometric CAD drawing sheet to be submitted in the Mechanical Engineering CAD laboratory.",
+    "attachmentName": "MEE403_GearboxDesign_Specification.pdf",
+    "uploadedBy": "EES/23/24/0456",
+    "uploadedByName": "Micheal Chukwuemeka OBI",
+    "timestamp": "2026-10-02"
+  }
+]

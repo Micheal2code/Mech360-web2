@@ -1,0 +1,39 @@
+[
+  {
+    "id": "rec-mee401-1",
+    "courseCode": "MEE 401",
+    "topic": "Heat Exchanger Log Mean Temperature Difference (LMTD) & NTU Method",
+    "lecturer": "Prof. Babalola",
+    "duration": "42:15",
+    "audioUrl": "https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3",
+    "timestamps": [
+      { "time": "00:00", "seconds": 0, "label": "Introduction & Parallel vs Counter-flow" },
+      { "time": "12:30", "seconds": 750, "label": "Derivation of Delta T_lm" },
+      { "time": "25:40", "seconds": 1540, "label": "Effectiveness-NTU Relations" },
+      { "time": "36:15", "seconds": 2175, "label": "Worked Numerical Problem" }
+    ],
+    "notes": "Key point: Always use counter-flow when temperature cross occurs or to maximize heat transfer area economy.",
+    "uploadedBy": "EES/23/24/0456",
+    "uploadedByName": "Micheal Chukwuemeka OBI",
+    "timestamp": "2026-10-01",
+    "plays": 56
+  },
+  {
+    "id": "rec-mee403-1",
+    "courseCode": "MEE 403",
+    "topic": "Rolling Contact Bearing Life Expectancy (L10 & C Rating)",
+    "lecturer": "Dr. Adeleke",
+    "duration": "35:40",
+    "audioUrl": "https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3",
+    "timestamps": [
+      { "time": "00:00", "seconds": 0, "label": "Deep Groove Ball vs Cylindrical Roller Bearings" },
+      { "time": "10:15", "seconds": 615, "label": "Equivalent Dynamic Load P = X*F_r + Y*F_a" },
+      { "time": "22:00", "seconds": 1320, "label": "L10 Life Equation in Million Revolutions" }
+    ],
+    "notes": "Formula: L10 = (C / P)^p, where p=3 for ball bearings and p=10/3 for roller bearings.",
+    "uploadedBy": "EES/23/24/0456",
+    "uploadedByName": "Micheal Chukwuemeka OBI",
+    "timestamp": "2026-09-30",
+    "plays": 48
+  }
+]

@@ -83,6 +83,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
           api.getProgressMonitor(currentUser.matricNo),
         ]);
         setRoster(rosterRes.roster || []);
+        console.log("ROSTER LOADED FROM JSON:", (rosterRes.roster || []).length);
         setAuditLogs(logsRes.logs || []);
         setPasswordsList(passRes.passwords || []);
         setResetCodes(resetRes.requests || []);
@@ -1301,7 +1302,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
                   <th className="py-3 px-3">Student Name</th>
                   <th className="py-3 px-3">Role</th>
                   <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3">Stored Password</th>
+                  <th className="py-3 px-3">Password Security</th>
                   <th className="py-3 px-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -1313,8 +1314,6 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
                     return item.fullName.toLowerCase().includes(q) || item.matricNo.toLowerCase().includes(q);
                   })
                   .map((item) => {
-                    const isVisible = showPlainText[item.matricNo];
-
                     return (
                       <tr key={item.matricNo} className="hover:bg-slate-950/60">
                         <td className="py-3 px-3 font-mono font-bold text-white">{item.matricNo}</td>
@@ -1345,24 +1344,11 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ courses, assig
                         </td>
                         <td className="py-3 px-3 font-mono">
                           {item.hasPassword ? (
-                            <div className="flex items-center gap-2">
-                              <span className="bg-slate-950 px-2 py-1 rounded text-emerald-300 border border-slate-800 tracking-wider">
-                                {isVisible ? item.password : '••••••••'}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  setShowPlainText((prev) => ({
-                                    ...prev,
-                                    [item.matricNo]: !prev[item.matricNo],
-                                  }))
-                                }
-                                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer"
-                              >
-                                {isVisible ? 'Hide' : 'Reveal'}
-                              </button>
-                            </div>
+                            <span className="bg-slate-950 px-2.5 py-1 rounded text-emerald-300 border border-slate-800 tracking-widest text-[11px] font-mono">
+                              ******
+                            </span>
                           ) : (
-                            <span className="text-slate-500 italic">Not set yet</span>
+                            <span className="text-slate-500 italic text-[11px]">Not configured</span>
                           )}
                         </td>
                         <td className="py-3 px-3 text-right">

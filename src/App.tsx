@@ -21,6 +21,7 @@ import { FeedbackView } from './views/FeedbackView';
 
 import { Course, CourseNote, LectureRecording, Assignment, Announcement, PdfRequest } from './types';
 import { api } from './services/api';
+import rosterJson from './data/roster.json';
 
 const AppContent: React.FC = () => {
   const { currentUser, isMasterAdmin, canUpload } = useAuth();
@@ -66,6 +67,7 @@ const AppContent: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("ROSTER LOADED FROM JSON:", rosterJson.length);
     loadAllData();
     const isSecretAdminRoute = window.location.pathname === '/admin-access-2026' || 
                                window.location.hash === '#/admin-access-2026' || 

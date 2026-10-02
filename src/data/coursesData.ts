@@ -1,6 +1,7 @@
 import { Course, Channel } from '../types';
+import coursesJson from './courses.json';
 
-export const DEFAULT_FALLBACK_COURSES: Course[] = [];
+export const DEFAULT_FALLBACK_COURSES: Course[] = coursesJson as Course[];
 
 export const TOPIC_CHANNELS: Channel[] = [
   {

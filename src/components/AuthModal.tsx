@@ -106,6 +106,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMsg('');
     setLoading(true);
 
+    const currentLevel = localStorage.getItem('mee_selected_level') || '400';
+
     try {
       const res = await checkMatric(matricInput.trim().toUpperCase());
       setStudentInfo({ matricNo: res.matricNo, fullName: res.fullName });
@@ -145,6 +147,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMsg('');
     setLoading(true);
 
+    const currentLevel = localStorage.getItem('mee_selected_level') || '400';
+
     try {
       const user = await setupPassword(studentInfo.matricNo, passwordInput);
       setSuccessMsg(`Welcome, ${user.fullName}! Password configured successfully. Refreshing page...`);
@@ -173,6 +177,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setErrorMsg('');
     setSuccessMsg('');
     setLoading(true);
+
+    const currentLevel = localStorage.getItem('mee_selected_level') || '400';
 
     try {
       const user = await loginWithPassword(studentInfo.matricNo, passwordInput);
@@ -310,7 +316,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 ClassHub Authentication
               </h3>
               <p className="text-[11px] font-semibold text-slate-400">
-                Verified 114 Student Database • Secure Portal
+                {(() => {
+                  const lvl = typeof window !== 'undefined' ? localStorage.getItem('mee_selected_level') || '400' : '400';
+                  return lvl === '400' ? 'Verified 114 Student Database • Secure Portal' : `${lvl}L Student Record Database • Secure Portal`;
+                })()}
               </p>
             </div>
           </div>

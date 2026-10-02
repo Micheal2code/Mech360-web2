@@ -1,0 +1,82 @@
+[
+  {
+    "code": "MEE 401",
+    "title": "Heat and Mass Transfer",
+    "units": 3,
+    "lecturer": "Prof. Babalola",
+    "description": "Conduction, convection, radiation heat transfer, boiling, condensation, and heat exchangers design.",
+    "iconEmoji": "🔥",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 403",
+    "title": "Machine Design II",
+    "units": 3,
+    "lecturer": "Dr. Adeleke",
+    "description": "Design of mechanical components: clutches, brakes, gears, bearings, springs, and pressure vessels.",
+    "iconEmoji": "⚙️",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 405",
+    "title": "Fluid Power & Hydraulic Machinery",
+    "units": 3,
+    "lecturer": "Engr. Dr. Okonkwo",
+    "description": "Fluid power systems, pumps, turbines, hydraulic circuits, valves, actuators, and pneumatic systems.",
+    "iconEmoji": "💧",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 407",
+    "title": "Mechanics of Deformable Bodies",
+    "units": 3,
+    "lecturer": "Prof. Sanni",
+    "description": "3D stress and strain analysis, yield criteria, unsymmetrical bending, torsion of non-circular sections, and plates.",
+    "iconEmoji": "📐",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 409",
+    "title": "Theory of Machines & Vibrations",
+    "units": 3,
+    "lecturer": "Dr. Alabi",
+    "description": "Kinematics, dynamics of machinery, balancing of rotating and reciprocating masses, single and multi-degree vibrations.",
+    "iconEmoji": "⚡",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 411",
+    "title": "Applied Thermodynamics",
+    "units": 3,
+    "lecturer": "Dr. Olayiwola",
+    "description": "Power cycles, refrigeration and air conditioning systems, combustion stoichiometry, and gas turbines.",
+    "iconEmoji": "🌡️",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 413",
+    "title": "Engineering Metallurgy & Materials Selection",
+    "units": 2,
+    "lecturer": "Dr. Mrs. Ogundimu",
+    "description": "Phase equilibria, heat treatment of steels, alloy design, corrosion mechanisms, and material selection charts.",
+    "iconEmoji": "🔬",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  },
+  {
+    "code": "MEE 415",
+    "title": "CAD/CAM & Finite Element Analysis",
+    "units": 2,
+    "lecturer": "Engr. Adeyemi",
+    "description": "SolidWorks 3D modeling, FEA meshing, boundary conditions, CNC G-code generation, and computer-integrated manufacturing.",
+    "iconEmoji": "💻",
+    "colorBg": "bg-slate-900",
+    "colorBorder": "border-slate-800"
+  }
+]
