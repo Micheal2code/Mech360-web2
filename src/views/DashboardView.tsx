@@ -3,7 +3,18 @@ import { useAuth } from '../context/AuthContext';
 import { useAudioPlayer } from '../context/AudioContext';
 import { Course, CourseNote, LectureRecording, Assignment, Announcement } from '../types';
 import { api } from '../services/api';
-import { ENGINEERING_FUN_FACTS, FunFact } from '../data/funFacts';
+
+const ENGINEERING_FUN_FACTS = [
+  "The Mercedes-Benz three-pointed star logo represents land, sea, and air dominance in engineering.",
+  "In 1913, the first modern moving assembly line was introduced by Henry Ford, reducing chassis production time from 12 hours to 93 minutes.",
+  "The Rankine cycle is a model used to predict the performance of steam turbine systems, commonly found in thermal power plants.",
+  "The maximum efficiency of any thermodynamic cycle is defined by the Carnot Limit, which depends purely on temperature extremes.",
+  "In fluid mechanics, the Navier-Stokes equations describe how fluids flow. They are so complex that there is a $1,000,000 Millennium Prize for proving their smooth solutions exist.",
+  "Titanium possesses the highest strength-to-weight ratio of any metal, making it a critical material for aerospace and advanced mechanical designs.",
+  "A double-clutch transmission shifts gears in less than 8 milliseconds, which is about 40 times faster than a human blink.",
+  "The world's largest diesel engine, the Wärtsilä-Sulzer RTA96-C, produces 109,000 horsepower and is used in container ships.",
+  "Regenerative braking in hybrid and electric cars converts kinetic energy back into electrical energy during deceleration, saving up to 30% of energy."
+];
 
 interface DashboardViewProps {
   courses: Course[];
@@ -25,10 +36,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const { currentUser, isMasterAdmin, canUpload } = useAuth();
   const { playLecture, currentLecture, isPlaying } = useAudioPlayer();
 
-  // Fun Facts state (rotates every 30 seconds)
+  // Fun Facts state (rotates every minute)
   const [factIndex, setFactIndex] = useState(0);
-  const [showAllFactsModal, setShowAllFactsModal] = useState(false);
-  const [factCategoryFilter, setFactCategoryFilter] = useState('ALL');
 
   // Student progress state
   const [studentProgress, setStudentProgress] = useState<{ notesRead: string[]; assignmentsCompleted: string[]; progressPercentage: number }>({
@@ -502,76 +511,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Expanded Engineering Fun Facts Hub Widget */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow space-y-3.5 relative overflow-hidden">
-            <div className="flex items-center justify-between gap-2">
+          {/* Random Engineering Fun Facts Widget (Rotates every minute or with a next click button) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow space-y-3 relative overflow-hidden">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xl">💡</span>
-                <div>
-                  <h2 className="font-extrabold text-white text-sm">Engineering Fun Fact</h2>
-                  <span className="text-[10px] text-blue-400 font-mono font-semibold">
-                    Fact {factIndex + 1} of {ENGINEERING_FUN_FACTS.length}
-                  </span>
-                </div>
+                <h2 className="font-extrabold text-white text-sm">Engineering Fun Fact</h2>
               </div>
-
-              <button
-                onClick={() => setShowAllFactsModal(true)}
-                className="text-[10px] bg-blue-900/60 hover:bg-blue-800 text-blue-200 font-extrabold px-2.5 py-1 rounded-lg border border-blue-700/80 cursor-pointer transition-all shadow"
-              >
-                📚 All {ENGINEERING_FUN_FACTS.length} Facts
-              </button>
-            </div>
-
-            {/* Fact Card Display */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-950 px-2 py-0.5 rounded border border-blue-800 flex items-center gap-1">
-                  <span>{ENGINEERING_FUN_FACTS[factIndex]?.emoji || '💡'}</span>
-                  <span>{ENGINEERING_FUN_FACTS[factIndex]?.category || 'Engineering'}</span>
-                </span>
-                <span className="text-[9px] text-slate-500 font-mono uppercase">Auto-Rotates</span>
-              </div>
-
-              <h3 className="text-xs font-bold text-white leading-snug">
-                {ENGINEERING_FUN_FACTS[factIndex]?.title}
-              </h3>
-
-              <p className="text-xs text-slate-300 leading-relaxed font-semibold italic">
-                "{ENGINEERING_FUN_FACTS[factIndex]?.fact}"
-              </p>
-
-              <div className="pt-2 border-t border-slate-900">
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  {ENGINEERING_FUN_FACTS[factIndex]?.detail}
-                </p>
-              </div>
-            </div>
-
-            {/* Navigation & Randomizer Controls */}
-            <div className="flex items-center justify-between gap-1.5 pt-1">
-              <button
-                onClick={() => setFactIndex((prev) => (prev - 1 + ENGINEERING_FUN_FACTS.length) % ENGINEERING_FUN_FACTS.length)}
-                className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-lg border border-slate-700 cursor-pointer transition-colors text-center"
-              >
-                ⬅️ Prev
-              </button>
-              <button
-                onClick={() => {
-                  const randomIndex = Math.floor(Math.random() * ENGINEERING_FUN_FACTS.length);
-                  setFactIndex(randomIndex);
-                }}
-                className="py-1.5 px-3 bg-indigo-950 hover:bg-indigo-900 text-indigo-200 border border-indigo-700 text-[11px] font-extrabold rounded-lg cursor-pointer transition-colors shadow"
-                title="Shuffle Random Fact"
-              >
-                🎲 Random
-              </button>
               <button
                 onClick={() => setFactIndex((prev) => (prev + 1) % ENGINEERING_FUN_FACTS.length)}
-                className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-lg border border-slate-700 cursor-pointer transition-colors text-center"
+                className="text-[10px] bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold px-2 py-1 rounded border border-slate-700 cursor-pointer"
+                title="Next Fact"
               >
                 Next ➡️
               </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-850 min-h-[90px] flex items-center">
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold italic">
+                "{ENGINEERING_FUN_FACTS[factIndex]}"
+              </p>
+            </div>
+            <div className="text-[9px] text-slate-500 text-right uppercase tracking-wider font-mono">
+              Auto-rotates every 60 seconds
             </div>
           </div>
 
@@ -617,74 +579,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* All Engineering Fun Facts Modal */}
-      {showAllFactsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl">🧠</span>
-                <div>
-                  <h2 className="text-base font-extrabold text-white">Engineering Knowledge Vault</h2>
-                  <p className="text-xs text-blue-300 font-semibold">
-                    Complete Collection of {ENGINEERING_FUN_FACTS.length} Fascinating Mechanical Facts
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAllFactsModal(false)}
-                className="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border border-slate-700 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Body - Grid of Facts */}
-            <div className="p-5 overflow-y-auto space-y-4 flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {ENGINEERING_FUN_FACTS.map((fact, idx) => (
-                  <div
-                    key={fact.id}
-                    onClick={() => {
-                      setFactIndex(idx);
-                      setShowAllFactsModal(false);
-                    }}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-2.5 ${
-                      factIndex === idx
-                        ? 'bg-blue-950/80 border-blue-500 shadow-lg'
-                        : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 bg-blue-900/40 px-2 py-0.5 rounded border border-blue-800 flex items-center gap-1">
-                        <span>{fact.emoji}</span>
-                        <span>{fact.category}</span>
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-mono">#{fact.id}</span>
-                    </div>
-
-                    <h4 className="text-xs font-bold text-white leading-snug">{fact.title}</h4>
-                    <p className="text-xs text-slate-300 font-medium italic leading-relaxed">"{fact.fact}"</p>
-                    <p className="text-[11px] text-slate-400 pt-2 border-t border-slate-900 leading-normal">{fact.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-800 bg-slate-950/80 text-right">
-              <button
-                onClick={() => setShowAllFactsModal(false)}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl border border-blue-400 shadow cursor-pointer"
-              >
-                Close Vault
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
